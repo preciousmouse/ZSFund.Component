@@ -1,0 +1,14 @@
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\bin\Debug\netcoreapp2.1\ZSFund.Component.deps.json
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\bin\Debug\netcoreapp2.1\ZSFund.Component.runtimeconfig.json
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\bin\Debug\netcoreapp2.1\ZSFund.Component.runtimeconfig.dev.json
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\bin\Debug\netcoreapp2.1\ZSFund.Component.dll
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\bin\Debug\netcoreapp2.1\ZSFund.Component.pdb
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\obj\Debug\netcoreapp2.1\ZSFund.Component.csprojAssemblyReference.cache
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\obj\Debug\netcoreapp2.1\ZSFund.Component.csproj.CoreCompileInputs.cache
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\obj\Debug\netcoreapp2.1\ZSFund.Component.RazorAssemblyInfo.cache
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\obj\Debug\netcoreapp2.1\ZSFund.Component.RazorAssemblyInfo.cs
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\obj\Debug\netcoreapp2.1\ZSFund.Component.AssemblyInfoInputs.cache
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\obj\Debug\netcoreapp2.1\ZSFund.Component.AssemblyInfo.cs
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\obj\Debug\netcoreapp2.1\ZSFund.Component.RazorTargetAssemblyInfo.cache
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\obj\Debug\netcoreapp2.1\ZSFund.Component.dll
+D:\TFS\公共组件\ZSFund.Component\ZSFund.Component\obj\Debug\netcoreapp2.1\ZSFund.Component.pdb
