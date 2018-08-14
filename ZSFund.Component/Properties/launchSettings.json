@@ -1,0 +1,29 @@
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:49317/",
+      "sslPort": 0
+    }
+  },
+  "profiles": {
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "launchUrl": "http://localhost:49317/api/StockInfo/GetStockInfo?queryStr=%E5%B9%B3%E5%AE%89",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "ZSFundComponent": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      //"launchUrl": "http://localhost:49318/metadata.html",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      } ,
+      "applicationUrl": "http://localhost:49318/"
+    }
+  }
+}

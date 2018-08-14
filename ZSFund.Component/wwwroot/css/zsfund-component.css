@@ -1,0 +1,75 @@
+﻿.componydialog {
+    width: 500px;
+    margin-top: 8vh !important;
+}
+
+.el-input{
+    /*解决Edge浏览器上 input上的tags被input框覆盖的问题*/
+    position: static;
+} 
+
+/*调整组件默认样式*/
+.el-dialog__header{
+    padding: 20px 0 0;
+}
+.el-dialog__headerbtn{
+    top: 10px;
+    right: 10px;
+}
+.el-dialog__body {
+    padding: 15px 5px 10px 20px !important;
+}
+.el-dialog__body .el-select{
+    width: 100% !important;
+    padding-right: 25px;
+}
+.el-dialog__body .el-select .el-input__inner{
+    padding-right: 0;
+}
+.el-dialog__body .el-tree {
+    height: 60vh;
+    overflow-y: auto;
+    margin-top: 15px;
+}
+/*.el-dialog__footer {
+    padding: 10px 15px 10px;
+}
+.el-dialog__footer .el-button {
+    padding: 8px 10px;
+    font-size: 12px;
+}*/
+
+/*color: #409EFF;
+background-color: rgba(64,158,255,.1);
+border: 1px solid rgba(64,158,255,.2);*/
+
+.select{
+    /*去除当选择tags长度大于input框时出现的滚动条*/
+    overflow: hidden;
+}
+.select .tags {
+    position: absolute;
+    top: 18% !important;
+    overflow-x: auto;
+    width: 100%;
+    height: calc(100% + 12px);
+    padding: 2px 6px 0 0;
+}
+.select .tags .el-tag {
+    display: inline; 
+    padding: 5px 8px;
+}
+
+#orgTreeSelect .footer {
+    text-align: right;
+    padding: 15px 15px 5px;
+}
+#orgTreeSelect .buttons .el-button {
+    padding: 8px 10px;
+    font-size: 12px;
+}
+#orgTreeSelect .el-select .el-tag {
+    background-color: rgba(64,158,255,.1);
+    border-color: rgba(64,158,255,.2);
+    color: #409EFF;
+}

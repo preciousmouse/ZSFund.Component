@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title id="webstiteTitle">组件测试</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="stylesheet" type="text/css" href="css/elementui-2.4.6.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="css/zsfund-component.css">
+    <script src="js/libs/jquery-3.2.1.min.js"></script>
+    <script src="js/libs/bootstrap.min.js"></script>
+    <script src="js/libs/vue.min.js"></script>
+    <script src="js/libs/elementui-2.4.6.js"></script>
+    <script src="js/components/zsfund-componet.js"></script>
+
+</head>
+
+<body>
+    <div id="components-demo">
+        <zsfund-stock-select v-model="secCode" @change="change" size="mini"></zsfund-stock-select>
+        <input type="button" v-on:click="showCode" value="show secCode" />
+        <zsfund-origination-input-select :options="OrgOptions" :baseurl="baseUrl" v-model="str"></zsfund-origination-input-select>
+        <zsfund-origination-input-select :options="OrgOptions" :baseurl="baseUrl" v-model="str2"></zsfund-origination-input-select>
+        <el-button @click="showNodes">console log: nodes</el-button>
+
+    </div>
+</body>
+
+</html>
+<script>
+    var vm = new Vue({
+        el: '#components-demo',
+        data: {
+            str: "C29973E1-4F1B-4CE4-A413-4FF76A3DC32F",
+            str2: "36407FD0-3E4B-4E03-9819-0ED61DFB45D6",
+            //str: "",
+            //加载组件前str希望是一个字符串，表示一串id列表，以分号;分割
+            //返回的结果值也由str接收，格式与上述相同
+            //////nodes: [],
+            ////////nodes用于接收通过组件选择得到的值 
+            ////////返回值是一个数组，用于存放选择员工（部门）的信息
+            ////////即使在单选模式下，返回值也是一个长度为0或1的数组
+            secCode: null,
+            OrgOptions: {//zsfund-origination-input-select配置参数，说明如下：
+                collapseTags: false,//[option,默认为false]element-ui el-select组件自带的属性,选中多组数据时，若该值为true，则只会显示第一条tag，多余的以“+1”形式表示
+                disabled: false,//[option,默认为false],用于控制zsfund-origination-input-select组件是否可用
+                multiple: true,//[option,默认为true]用于控制zsfund-origination-input-select组件是否可多选
+                //type: 0,// [option,默认为0,其他参数为1（表示个人）8（表示部门）0（表示所有）]type=1：目录树中除了第一级节点之外，只显示员工节点,tpye=8：目录树中除了第一级节点之外，只显示部门节点,type=0：目录树节点全部显示
+                displayType: OrgBasePara.OrgSelectType.Employee | OrgBasePara.OrgSelectType.Department,
+                                //[option,默认为OrgBasePara.OrgSelectType.All,支持多个参数的位或运算结果,例如9(表示个人+部门)]
+                                /*
+                                    OrgBasePara.OrgSelectType = enum{
+                                        Employee = 1,
+                                        Department = 8,
+                                        All = 255
+                                    }
+                                 */
+                chosenType: OrgBasePara.OrgSelectType.Employee | OrgBasePara.OrgSelectType.Department,//[option,默认为displayType的值,用法与其相同]
+            },
+            baseUrl: "http://userservice" //[option,默认为"http://userservice"，可通过:baseurl传入更改]
+        },
+        methods: {
+            change: function (value) {
+                console.log(value);
+            },
+            showCode: function () {
+                console.log(this.secCode);
+            },
+
+            showNodes: function () {
+                console.log(this.str);
+                this.str = "843a0e84-4c91-429c-96d3-d74f8269ca4c;C29973E1-4F1B-4CE4-A413-4FF76A3DC32F";
+            }
+        }
+    });
+</script> 
