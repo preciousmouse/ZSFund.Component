@@ -1,0 +1,81 @@
+baseURL
+	http://10.10.0.175:8088/doc/
+
+var postdata = {
+    ObjectID: //添加时设为0
+    MetaCategoryName: 
+    Description: 
+    MetaCategoryType: 
+    IsExternal: 
+    ExternalWebApi: //IsExternal为false时设为null
+    KeyValueMetadata: "",
+    ParentID: 
+    IsDeleted: false,
+    PermissionInherited: true
+}; 
+
+	KeyValueMetadata的格式：
+	{"KeyType":"0","Entities":[{"name":"主岗","type":"0"},{"name":"备岗","type":"0"},{"name":"开发","type":"0"},{"name":"URL","type":"0"}]} 
+	{"KeyType":"0","Entities":[]} 
+
+
+
+public static MetadataProprertyTypeEnum = {
+    String: 0,
+    Number: 1,
+    DateTime: 2,
+    Boolean: 3,
+    Entities: 4
+}
+
+新建或者修改元数据：
+data = {
+    ObjectID: 0,        //0表示新建
+    CategoryPath: 	//界面上绑定需要，但是post的时候这个数据其实并不使用
+    MetaCategoryID: 
+    MetaDetailName: "",
+    MetaDetailValue: "",
+    Sort: 0,
+    Description: "",
+    IsDeleted: false
+};  
+
+this.tableForm = {
+    objectId: 0,
+    categoryPath: "/",
+    metaCategoryId: 0,
+    metaDetailName: "",
+    metaDetailValue: "",
+    description: "",
+    sort: 0,
+    isDeleted: false,
+};
+
+
+global：
+	1、 	dialog取消按钮考虑改成重置
+
+Category部分
+	1、	api新建/修改
+			新建节点时未指定parentId不会报错？
+			会影响现有其他数据，造成请求500/401
+	2、	api删除
+			无法删除数据 401
+	3、	表单验证		
+	4、	根据PermissionInherited值添加节点前icon			--solve
+
+
+detail部分
+	1、	api删除
+			无法删除数据 401
+	2、	表单验证
+			api上传时key、value都不能为空
+			验证key不为空，value设为类型初始值
+	3、	value类型根据节点设置表现为不同input形式			--solve
+
+	4、 	search结果，api未返回类型，包括实体类型下的子类型规定	--solve
+
+	5.1、Date类型的value，目前是转换为yyyy-mm--dd的字符串格式传给后台
+		需要使用Date对象或者其他形式时，需要进行进出格式转换
+	5.2、Boolean类型也是用字符串传输
+		其他形式需要做转换

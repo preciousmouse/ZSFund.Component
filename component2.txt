@@ -1,0 +1,115 @@
+需求：
+	1、控制单选，props参数默认值					--solve
+	2、大组件的enable值，控制可编辑性				--solve
+	3、控制选择的是人、或是部门、或是部门+人 			--solve
+		控制节点显示人、部门、全部				
+		可以选择部门
+		点击叶节点，可以直接选择				
+	4、单选时点击节点直接选中，不需要点击确认		--solve
+	5、dialog	———— 不可行时用bs的dialog代替		--solve
+		双重modal问题
+		content区域设置高度，在content内部滚动
+		上margin和头部占比过大
+	6.自动加载上一次选择内容						--solve
+		得到user的idList （ 1;2;3 ）
+	7、IE和Edge的兼容性问题						--solve
+	8、不同状态下外部input的表现形式
+		编辑状态
+		预览状态（打印状态）  
+	9、v-model绑定默认change事件，不用手动on事件	--solve
+		双向绑定死循环问题
+			(考虑判断值是否改变，不仅依赖watch)
+	10、样式问题									--solve
+		外部input超过一行时显示版式出错		
+		外部tags显示icon						
+	11、操作逻辑									--solve
+		异步加载节点信息
+		有checkbox
+		点击非叶节点可展开
+		点击checkbox或叶节点进行节点选择
+			或取消选择
+
+		对于不同的选择模式(员工、部门)
+			员工选择模式下
+				部门复选框disabled
+			部门选择模式下
+				不显示员工节点
+			混合选择模式下
+				显示全部、可选择全部
+
+
+		操作checkbox，搜索栏进行相应的更新		--solve
+		搜索栏通过搜索选中内容或关闭标签后		--solve
+			若相应节点已加载，则
+				相应节点的checkbox进行更新
+		节点加载时，若在搜索栏中被选中			--solve
+			则checkbox进行更新
+
+	12、new request
+		1、 最外层使用v-model绑定值			--solve
+			入口参数和出口参数都设置为字符串
+				idList，分号分隔
+		2、 员工选择模式下						--solve
+			显示部门节点，但是不可选择
+
+		3、 使用typescript对type值进行枚举		--solve
+
+		4、 可显示和可选择逻辑分离				--solve
+
+		5、 dialog自适应						--solve
+			不同尺寸屏幕控制左右边距和宽度值
+
+bugs：
+	内外数据不同步情况
+		1、	多选模式下，内部关闭tag后点击取消，外部数据不变化		--solve
+			此时再打开内部dialog时，内外数据不同步
+				缓存/动态重复加载
+
+		2、	单选模式下，外部删除tags后内部select内容不会消失		--solve
+			此时内部checkbox已取消选择，然而直接点确定可以进行选择操作
+
+	选中值初始化问题
+		1、	上一次选中节点加载时，树节点的checkbox不同步		--solve
+		2、	初始化值可能为当前模式下不可选中的值，例如以下情况
+				可显示 人+部门
+				可选择 人
+				初始化 某个部门
+		3、	初始化值中包含部门时api只会返回人的信息
+
+	搜索问题
+		1、	通过搜索可能选取到不可选择的值		--solve
+			参考情况见选中值初始化2
+
+	setArrayFromData问题
+		1、	leaf、depth、type、disabled等属性的现有逻辑
+			只适用于仅有department和employee的情况，
+			扩展类型时需要重新改动
+
+		2、	内外组件setArrayFromData同步问题		--solve
+
+	displayType问题
+		1、	值为单个选项(0x1、0x1000)时逻辑正常
+			值为多个选项时get路径中type参数无效导致获取到所有type情况，无法完成筛选
+				可通过调整api、或手动筛选或手动迭代get数据
+
+	check：
+		1、  idList的api返回data顺序不是按传入的idList		--solve
+				—— api问题
+				—— 接收时进行排序
+		2、  重新初始化时原数据checkbox显示错误				--solve
+				关闭dialog时清空checkbox
+				打开时会自动加载checkbox
+		3、  开启value watch之后，无法选择部门				
+				api会过滤部门节点，回调加载导致不显示
+					暂时设定外层组件外部传入值是上一次传出值时，不重新调用api进行初始化，idlist顺序改变同样判断为不相等
+														--solve
+		4、 	外层选中值改变时标签闪烁问题
+
+		5、 	多个组件时，仅有第一个加载的组件可以正常使用	--solve
+
+小组件内外值绑定问题
+
+
+『	组件可扩展性
+『	业务扩展性
+『	业务使用体验
