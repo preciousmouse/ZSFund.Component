@@ -141,10 +141,10 @@ class Common {
         var result: any = "";
         var a = $.ajax({
             url: url,
-            method: method,
+            type: method,
             async: async,
             cache: false,
-            //contentType: method == "POST" ? "application/json-patch+json" : undefined,
+            //contentType: method == "DELETE" ? "application/x-www-form-urlencoded" : undefined,
             data: data,
            // data:
             xhrFields: {

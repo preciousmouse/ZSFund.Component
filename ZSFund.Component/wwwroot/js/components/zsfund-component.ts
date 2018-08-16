@@ -93,6 +93,18 @@ class OrgBasePara {
         }
         return 1 << count;
     }
+
+    static findIndex(array, callback) {
+        if (!Array.isArray(array)) {
+            return -2;
+        }
+        for (var i = 0; i < array.length;i++) {
+            if (callback(array[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
 }
 
 class Metadata {
@@ -107,6 +119,13 @@ class Metadata {
         }
         Metadata.MetadataProprertyTypeEnum = MetadataProprertyTypeEnum;
     }
+    //public static MetadataProprertyTypeEnum = {
+    //    String: 0,
+    //    Number: 1,
+    //    DateTime: 2,
+    //    Boolean: 3,
+    //    Entities: 4,
+    //}
 }
 
 var ajaxHelper = new AjaxHelper();
@@ -428,12 +447,12 @@ Vue.component("zsfund-origination-input-select", {
                 collapseTags: false,
                 multiple: false,
                 //type: 0,
+                //并没有用到的width和height
                 width: "",
                 height: "",
 
                 //loadUrl: "/api/Org/Children"  //type test url
             },
-            
         }
     },
     props: ['options', 'value','baseurl'],
@@ -457,7 +476,7 @@ Vue.component("zsfund-origination-input-select", {
                     <el-input v-show="tags.length==0" placeholder="请输入内容"></el-input>
                 </div>
                 <el-dialog :visible.sync="dialogVisible" :width="300" custom-class="componydialog"
-                        :modal-append-to-body="false" append-to-body :close-on-click-modal="false">
+                        :modal-append-to-body="false" :close-on-click-modal="false">
                     <zsfund-origination-tree :prevnodes="prevNodes" :options="option" 
                         ref="orgTree" :baseurl="baseUrl" :dialog="dialogVisible"
                         v-on:getvalue="setValue" v-on:cancelbutton="dialogVisible=false;"
@@ -524,7 +543,7 @@ Vue.component("zsfund-origination-input-select", {
             //    this.tags.splice(0);
             //}
 
-            var url = "http://userservice/api/User/List";
+            var url = this.baseUrl + "/api/User/List";
             var para = "idList=" + idList;
             //部门选择模式和混合选择模式逻辑未做
             ajaxHelper.RequestData(url, para, (data) => {
@@ -532,11 +551,11 @@ Vue.component("zsfund-origination-input-select", {
                 //把部门节点筛选出进行保留
                 //var test = $.extend(true, [], this.tags);
                 //test.sort((a, b) => {
-                //    return this.$refs.orgTree.findIndex(idList, function (e) { return e.data.unitType != OrgBasePara.OrgSelectType.Employee })
-                //        - this.$refs.orgTree.findIndex(idList, function (e) { return e.data.unitType != OrgBasePara.OrgSelectType.Employee });
+                //    return OrgBasePara.findIndex(idList, function (e) { return e.data.unitType != OrgBasePara.OrgSelectType.Employee })
+                //        - OrgBasePara.findIndex(idList, function (e) { return e.data.unitType != OrgBasePara.OrgSelectType.Employee });
                 //});
                 //if (this.$refs.orgTree) {
-                //    this.tags.splice(0, this.$refs.orgTree.findIndex(this.tags,
+                //    this.tags.splice(0, OrgBasePara.findIndex(this.tags,
                 //        (e) => { return e.data.unitType == OrgBasePara.OrgSelectType.Employee }));
                 //}
                 //if (this.options.multiple) 
@@ -546,8 +565,8 @@ Vue.component("zsfund-origination-input-select", {
                 }
                 //排序 api返回的数据结果没有按上传的idList进行排序
                 cpy.sort((a, b) => {
-                    return this.$refs.orgTree.findIndex(idList, function (e) { return e == a.id })
-                        - this.$refs.orgTree.findIndex(idList, function (e) { return e == b.id });
+                    return OrgBasePara.findIndex(idList, function (e) { return e == a.id })
+                        - OrgBasePara.findIndex(idList, function (e) { return e == b.id });
                 });
                 //this.tags = cpy;
                 if (this.tags.__ob__) {
@@ -598,10 +617,10 @@ Vue.component("zsfund-origination-input-select", {
         //setArrayFromData内外同步
         //this.option.setArrayFromData = this.options.setArrayFromData;
 
-        this.baseUrl = this.baseurl ? this.baseurl : "http://userservice";
+        this.baseUrl = this.baseurl ? this.baseurl : "https://oa.zsfund.com/ApiGateway/UserService";
 
-        this.option.width= "260";
-        this.option.height = "300";
+        //this.option.width= "260";
+        //this.option.height = "300";
     },
     mounted: function () {
         this.loadLastNodes();

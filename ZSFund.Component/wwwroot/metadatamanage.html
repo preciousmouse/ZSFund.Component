@@ -1,0 +1,317 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>MetadataManage管理</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="stylesheet" type="text/css" href="css/elementui-2.4.6.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="css/font-awesome.min.css">
+    <!--<link rel="stylesheet" type="text/css" media="screen" href="css/zsfund-component.css">-->
+    <script src="js/libs/jquery-3.2.1.min.js"></script>
+    <script src="js/libs/bootstrap.min.js"></script>
+    <script src="js/libs/vue.min.js"></script>
+    <script src="js/libs/elementui-2.4.6.js"></script>
+    <!--useing Class-->
+    <script src="js/components/Common.js"></script>
+    <script src="js/components/metadatamanage.js"></script>
+    <style>
+        .el-button i {
+            font-size: 18px;
+        }
+
+        html, body {
+            min-height: 100%;
+        }
+
+        #app, #app > .el-container {
+            height: 100%;
+            min-height: 100vh;
+        }
+
+        .content .el-header {
+            text-align: right;
+            padding: 20px 10px 0;
+        }
+
+        .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
+            background-color: #f0f7ff;
+        }
+
+        .el-aside {
+            background-color: rgb(238, 241, 246);
+            min-width: 220px;
+            max-width: 350px;
+        }
+
+            .el-aside .el-header {
+                /*background-color: #fff;*/
+            }
+
+            .el-aside .el-tree {
+                width: 100%;
+                padding: 10px;
+                margin: 2px;
+            }
+
+        .el-input {
+            width: auto !important;
+        }
+
+        .el-dialog .el-input input {
+            height: 32px;
+        }
+
+        .el-dialog .el-input .el-input__icon {
+            line-height: 32px;
+        }
+
+        .el-form-item {
+            margin-bottom: 14px;
+            max-width: 600px;
+        }
+
+        .el-form-item__label, .el-form-item__content {
+            line-height: 32px;
+        }
+
+        .el-form .el-table {
+            margin: 0;
+        }
+
+            .el-form .el-table td, .el-form .el-table th {
+                padding: 0;
+                border-width: 0;
+                height: 35px;
+                /*min-height: 35px;*/
+            }
+
+        .el-table {
+            width: 100%;
+            margin: 20px 0 20px 30px;
+            height: -webkit-fit-content;
+            height: -moz-fit-content;
+            height: fit-content;
+            /*max-height:100%;*/
+        }
+
+        .el-dialog .el-table::before {
+            height: 0;
+        }
+
+        .el-dialog {
+            width: -webkit-fit-content;
+            width: -moz-fit-content;
+            width: fit-content;
+        }
+
+        .el-dialog__body {
+            padding: 30px 20px 10px;
+        }
+
+
+        .el-switch .el-switch__core {
+            outline-width: 0 !important;
+        }
+
+        .asdie-tree-node {
+            vertical-align: middle;
+        }
+
+            .asdie-tree-node img {
+                width: 22px;
+            }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <el-container>
+            <el-aside width="30%">
+                <el-container>
+                    <el-header height="auto">
+                        <el-button icon="el-icon-plus" size="mini" circle @click="handleTreeAdd"></el-button>
+                        <el-button icon="el-icon-delete" size="mini" circle @click="handleTreeDelete"></el-button>
+                        <el-button icon="el-icon-edit" size="mini" circle @click="handleTreeEdit"></el-button>
+                        <el-button icon="el-icon-refresh" size="mini" circle @click="handleTreeReset"></el-button>
+                    </el-header>
+                    <el-container>
+                        <el-tree :props="props" :data="treeData" node-key="objectId"
+                                 highlight-current default-expand-all :expand-on-click-node="false"
+                                 ref="asideTree" @current-change="handleCurrentChange">
+                            <span class="asdie-tree-node" slot-scope="ele">
+                                <img v-if="ele.data.permissionInherited" :src="permissionPicSrc" />
+                                <img v-else :src="noPermissionPicSrc" />
+                                <span>{{ ele.node.label }}</span>
+                            </span>
+                        </el-tree>
+                    </el-container>
+                </el-container>
+            </el-aside>
+            <el-container class="content">
+                <el-header height="auto">
+                    <el-input v-model="searchInput" placeholder="请输入内容"></el-input>
+                    <el-button icon="el-icon-search" circle @click="handleSearch"></el-button>
+                    <el-button icon="el-icon-plus" circle @click="handleTableAdd"></el-button>
+                </el-header>
+                <el-container>
+                    <el-table :data="tableData" border>
+                        <el-table-column prop="metaDetailName" label="Key">
+                        </el-table-column>
+                        <el-table-column prop="metaDetailValue" label="Value">
+                        </el-table-column>
+                        <el-table-column prop="sort" label="Index" :resizable="false" header-align="center" align="center" width="60">
+                        </el-table-column>
+                        <el-table-column prop="description" label="Description" show-overflow-tooltip>
+                        </el-table-column>
+                        <el-table-column prop="operation" label="" width="95">
+                            <template slot-scope="scope">
+                                <el-button icon="el-icon-edit" size="mini" circle @click="handleTableEdit(scope.$index, scope.row)"></el-button>
+                                <el-popover placement="top" width="160" v-model="tableDeleteVisible[scope.$index]">
+                                    <p>确定删除？</p>
+                                    <div style="text-align: right; margin: 0">
+                                        <el-button size="mini" type="text" @click="tableDeleteVisible[scope.$index]=false">取消</el-button>
+                                        <el-button type="primary" size="mini" @click="tableDeleteVisible[scope.$index]=false;handleTableDelete(scope.$index, scope.row)">确定</el-button>
+                                    </div>
+                                    <el-button slot="reference" icon="el-icon-delete" type="danger" size="mini" circle @click="tableDeleteVisible[scope.$index]=true"></el-button>
+                                </el-popover>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-container>
+            </el-container>
+        </el-container>
+
+        <el-dialog :visible.sync="treeDialogVisible" :close-on-click-modal="false" top="8vh" width="510px">
+            <div slot="title" class="el-dialog__title">
+                {{treeForm.formTitle}}
+            </div>
+            <el-form :model="treeForm" ref="treeForm" :rules="treeFormRules" inline-message>
+                <el-form-item label="父目录" :label-width="formLabelWidth">
+                    <span>{{treeForm.metaCategoryPath}}</span>
+                </el-form-item>
+                <el-form-item label="名称" :label-width="formLabelWidth" prop="name">
+                    <el-input v-model="treeForm.metaCategoryName" auto-complete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="值类型" :label-width="formLabelWidth">
+                    <el-select v-model="treeForm.metaCategoryType">
+                        <el-option v-for="(value,key) in mataCategoryTypeList"
+                                   :label="key" :value="value"></el-option>
+                        <el-option label="Entities" :value="MetadataManage.MetadataProprertyTypeEnum.Entities"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="实体属性" :label-width="formLabelWidth"
+                              v-if="treeForm.metaCategoryType==MetadataManage.MetadataProprertyTypeEnum.Entities">
+                    <el-table :data="metaTreeData" cell-style="{border-width:0;}">
+                        <el-table-column prop="type" label="值类型" header-align="center" width="130">
+                            <el-select slot-scope="scope" v-model="metaTreeData[scope.$index].type">
+                                <el-option v-for="(value,key) in mataCategoryTypeList"
+                                           :label="key" :value="value"></el-option>
+                            </el-select>
+                        </el-table-column>
+                        <el-table-column prop="name" label="值名称" header-align="center" width="200">
+                            <el-input slot-scope="scope" v-model="metaTreeData[scope.$index].name"></el-input>
+                        </el-table-column>
+                        <el-table-column header-align="center" width="50">
+                            <template slot-scope="scope">
+                                <el-button v-if="scope.$index>0" icon="el-icon-delete" size="mini" circle
+                                           @click="handleTreeFormDelete(scope.$index, scope.row)"></el-button>
+                                <el-button v-else icon="el-icon-plus" size="mini" circle
+                                           @click="handleTreeFormAdd()"></el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-form-item>
+                <el-form-item label="外部数据源" :label-width="formLabelWidth">
+                    <el-tooltip :content="externSwitch" placement="top">
+                        <el-switch v-model="externSwitch" active-color="#13ce66" active-value="on" inactive-value="off">
+                        </el-switch>
+                    </el-tooltip>
+                </el-form-item>
+                <el-form-item label="数据源Url" :label-width="formLabelWidth"
+                              v-if="treeForm.isExternal==true">
+                    <el-input v-model="treeForm.externalWebApi" auto-complete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="描述" :label-width="formLabelWidth">
+                    <el-input type="textarea" v-model="treeForm.description" auto-complete="off"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="treeDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="validateForm('treeForm')">确 定</el-button>
+            </div>
+        </el-dialog>
+
+        <el-dialog :visible.sync="tableDialogVisible" :close-on-click-modal="false" top="8vh" width="510px">
+            <div slot="title" class="el-dialog__title">
+                {{tableForm.formTitle}}
+            </div>
+            <el-form :model="tableForm" ref="tableForm" :rules="tableFormRules" inline-message>
+                <el-form-item label="所在目录" :label-width="formLabelWidth">
+                    <span>{{tableForm.categoryPath}}</span>
+                </el-form-item>
+                <el-form-item label="Key" :label-width="formLabelWidth">
+                    <el-input v-model="tableForm.metaDetailName" auto-complete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="Value" :label-width="formLabelWidth">
+                    <!--Number-->
+                    <el-input-number v-if="tableForm.metaCategoryType==MetadataManage.MetadataProprertyTypeEnum.Number"
+                                     v-model="tableForm.metaDetailValue" size="small"></el-input-number>
+                    <!--Date-->
+                    <el-date-picker v-else-if="tableForm.metaCategoryType==MetadataManage.MetadataProprertyTypeEnum.DateTime"
+                                    v-model="tableForm.metaDetailValue" type="date" placeholder="选择日期"
+                                    :picker-options="datePickerOptions" value-format="yyyy-MM-dd"></el-date-picker>
+                    <!--Bool-->
+                    <el-radio-group v-else-if="tableForm.metaCategoryType==MetadataManage.MetadataProprertyTypeEnum.Boolean"
+                                    v-model="tableForm.metaDetailValue" size="small">
+                        <el-radio-button label="true">True</el-radio-button>
+                        <el-radio-button label="false">False</el-radio-button>
+                    </el-radio-group>
+                    <!--Entities-->
+                    <el-table v-else-if="tableForm.metaCategoryType==MetadataManage.MetadataProprertyTypeEnum.Entities"
+                              :data="metaTableData.keyValueMetadata" cell-style="{border-width:0;}">
+                        <el-table-column prop="typeName" label="Type" header-align="center" align="center" width="90">
+                        </el-table-column>
+                        <el-table-column prop="name" label="Key" header-align="center" align="center" width="130">
+                            <!--<el-input slot-scope="scope" v-model="metaTableData[scope.$index].name"></el-input>-->
+                        </el-table-column>
+                        <el-table-column prop="value" label="Value" header-align="center" align="center" width="160">
+                            <!--<el-input slot-scope="scope" v-model="metaTableData.keyValueMetadata[scope.$index].value"></el-input>-->
+                            <div slot-scope="scope">
+                                <el-input-number v-if="metaTableData.keyValueMetadata[scope.$index].type==MetadataManage.MetadataProprertyTypeEnum.Number"
+                                                 v-model="metaTableData.keyValueMetadata[scope.$index].value" size="small"></el-input-number>
+                                <el-date-picker v-else-if="metaTableData.keyValueMetadata[scope.$index].type==MetadataManage.MetadataProprertyTypeEnum.DateTime"
+                                                v-model="metaTableData.keyValueMetadata[scope.$index].value" type="date" placeholder="选择日期"
+                                                :picker-options="datePickerOptions" value-format="yyyy-MM-dd"></el-date-picker>
+                                <el-radio-group v-else-if="metaTableData.keyValueMetadata[scope.$index].type==MetadataManage.MetadataProprertyTypeEnum.Boolean"
+                                                v-model="metaTableData.keyValueMetadata[scope.$index].value" size="small">
+                                    <el-radio-button label="true">True</el-radio-button>
+                                    <el-radio-button label="false">False</el-radio-button>
+                                </el-radio-group>
+                                <el-input v-else v-model="metaTableData.keyValueMetadata[scope.$index].value"></el-input>
+                            </div>
+                        </el-table-column>
+                    </el-table>
+                    <!--String and other unexcepted tpyes (default type)-->
+                    <el-input v-else v-model="tableForm.metaDetailValue" auto-complete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="Index" :label-width="formLabelWidth">
+                    <el-input-number size="small" v-model="tableForm.sort"></el-input-number>
+                </el-form-item>
+                <el-form-item label="描述" :label-width="formLabelWidth">
+                    <el-input type="textarea" v-model="tableForm.description" auto-complete="off"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="tableDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="validateForm('tableForm')">确 定</el-button>
+            </div>
+        </el-dialog>
+    </div>
+</body>
+</html>
+<script>
+    $(document).ready(function () {
+        var metadatamanage = new MetadataManage();
+        metadatamanage.Init();
+    })
+</script>

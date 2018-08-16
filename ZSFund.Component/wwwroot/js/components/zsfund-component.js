@@ -93,6 +93,17 @@ var OrgBasePara = /** @class */ (function () {
         }
         return 1 << count;
     };
+    OrgBasePara.findIndex = function (array, callback) {
+        if (!Array.isArray(array)) {
+            return -2;
+        }
+        for (var i = 0; i < array.length; i++) {
+            if (callback(array[i])) {
+                return i;
+            }
+        }
+        return -1;
+    };
     return OrgBasePara;
 }());
 var Metadata = /** @class */ (function () {
@@ -397,13 +408,14 @@ Vue.component("zsfund-origination-input-select", {
                 collapseTags: false,
                 multiple: false,
                 //type: 0,
+                //并没有用到的width和height
                 width: "",
                 height: "",
             },
         };
     },
     props: ['options', 'value', 'baseurl'],
-    template: "\n        <div>\n            <div v-if=\"options.disabled\">\n                <el-input :disabled=\"true\" placeholder=\"\u8BF7\u8F93\u5165\u5185\u5BB9\"></el-input></div>\n            <div v-else>\n                <div class=\"select\" @click=\"dialogVisible = true\" style=\"position:relative;\">\n                    <span class=\"tags\" style=\"position:absolute;top: 20%;\">\n                        <el-tag v-for=\"tag in tags\" :key=\"tag\" size=\"small\" style=\"margin-left: 6px;\"\n                                closable @close=\"closeTag(tag)\" :disable-transitions=\"true\">\n                            <i v-if=\"tag.type=='department'\" class=\"fa fa-university\"></i>\n                            <i v-else-if=\"tag.type=='group'\" class=\"fa fa-users\"></i>\n                            <i v-else-if=\"tag.type=='manager'\" class=\"fa fa-user-secret\"></i>\n                            <i v-else=\"tag.type=='employee'\" class=\"fa fa-user\"></i>\n                            {{tag.label}}\n                        </el-tag>\n                    </span>\n                    <el-input v-show=\"tags.length!=0\"></el-input>\n                    <el-input v-show=\"tags.length==0\" placeholder=\"\u8BF7\u8F93\u5165\u5185\u5BB9\"></el-input>\n                </div>\n                <el-dialog :visible.sync=\"dialogVisible\" :width=\"300\" custom-class=\"componydialog\"\n                        :modal-append-to-body=\"false\" append-to-body :close-on-click-modal=\"false\">\n                    <zsfund-origination-tree :prevnodes=\"prevNodes\" :options=\"option\" \n                        ref=\"orgTree\" :baseurl=\"baseUrl\" :dialog=\"dialogVisible\"\n                        v-on:getvalue=\"setValue\" v-on:cancelbutton=\"dialogVisible=false;\"\n                        v-on:confirmbutton=\"handleConfirm\"></zsfund-origination-tree>\n                </el-dialog>\n            </div>\n        </div>\n    ",
+    template: "\n        <div>\n            <div v-if=\"options.disabled\">\n                <el-input :disabled=\"true\" placeholder=\"\u8BF7\u8F93\u5165\u5185\u5BB9\"></el-input></div>\n            <div v-else>\n                <div class=\"select\" @click=\"dialogVisible = true\" style=\"position:relative;\">\n                    <span class=\"tags\" style=\"position:absolute;top: 20%;\">\n                        <el-tag v-for=\"tag in tags\" :key=\"tag\" size=\"small\" style=\"margin-left: 6px;\"\n                                closable @close=\"closeTag(tag)\" :disable-transitions=\"true\">\n                            <i v-if=\"tag.type=='department'\" class=\"fa fa-university\"></i>\n                            <i v-else-if=\"tag.type=='group'\" class=\"fa fa-users\"></i>\n                            <i v-else-if=\"tag.type=='manager'\" class=\"fa fa-user-secret\"></i>\n                            <i v-else=\"tag.type=='employee'\" class=\"fa fa-user\"></i>\n                            {{tag.label}}\n                        </el-tag>\n                    </span>\n                    <el-input v-show=\"tags.length!=0\"></el-input>\n                    <el-input v-show=\"tags.length==0\" placeholder=\"\u8BF7\u8F93\u5165\u5185\u5BB9\"></el-input>\n                </div>\n                <el-dialog :visible.sync=\"dialogVisible\" :width=\"300\" custom-class=\"componydialog\"\n                        :modal-append-to-body=\"false\" :close-on-click-modal=\"false\">\n                    <zsfund-origination-tree :prevnodes=\"prevNodes\" :options=\"option\" \n                        ref=\"orgTree\" :baseurl=\"baseUrl\" :dialog=\"dialogVisible\"\n                        v-on:getvalue=\"setValue\" v-on:cancelbutton=\"dialogVisible=false;\"\n                        v-on:confirmbutton=\"handleConfirm\"></zsfund-origination-tree>\n                </el-dialog>\n            </div>\n        </div>\n    ",
     methods: {
         setValue: function (data) {
             this.selectData = data;
@@ -459,7 +471,7 @@ Vue.component("zsfund-origination-input-select", {
             //else {
             //    this.tags.splice(0);
             //}
-            var url = "http://userservice/api/User/List";
+            var url = this.baseUrl + "/api/User/List";
             var para = "idList=" + idList;
             //部门选择模式和混合选择模式逻辑未做
             ajaxHelper.RequestData(url, para, function (data) {
@@ -467,11 +479,11 @@ Vue.component("zsfund-origination-input-select", {
                 //把部门节点筛选出进行保留
                 //var test = $.extend(true, [], this.tags);
                 //test.sort((a, b) => {
-                //    return this.$refs.orgTree.findIndex(idList, function (e) { return e.data.unitType != OrgBasePara.OrgSelectType.Employee })
-                //        - this.$refs.orgTree.findIndex(idList, function (e) { return e.data.unitType != OrgBasePara.OrgSelectType.Employee });
+                //    return OrgBasePara.findIndex(idList, function (e) { return e.data.unitType != OrgBasePara.OrgSelectType.Employee })
+                //        - OrgBasePara.findIndex(idList, function (e) { return e.data.unitType != OrgBasePara.OrgSelectType.Employee });
                 //});
                 //if (this.$refs.orgTree) {
-                //    this.tags.splice(0, this.$refs.orgTree.findIndex(this.tags,
+                //    this.tags.splice(0, OrgBasePara.findIndex(this.tags,
                 //        (e) => { return e.data.unitType == OrgBasePara.OrgSelectType.Employee }));
                 //}
                 //if (this.options.multiple) 
@@ -481,8 +493,8 @@ Vue.component("zsfund-origination-input-select", {
                 }
                 //排序 api返回的数据结果没有按上传的idList进行排序
                 cpy.sort(function (a, b) {
-                    return _this.$refs.orgTree.findIndex(idList, function (e) { return e == a.id; })
-                        - _this.$refs.orgTree.findIndex(idList, function (e) { return e == b.id; });
+                    return OrgBasePara.findIndex(idList, function (e) { return e == a.id; })
+                        - OrgBasePara.findIndex(idList, function (e) { return e == b.id; });
                 });
                 //this.tags = cpy;
                 if (_this.tags.__ob__) {
@@ -534,12 +546,12 @@ Vue.component("zsfund-origination-input-select", {
         this.option.chosenType = this.options.chosenType ? this.options.chosenType : this.options.displayType;
         //setArrayFromData内外同步
         //this.option.setArrayFromData = this.options.setArrayFromData;
-        this.baseUrl = this.baseurl ? this.baseurl : "http://userservice";
-        this.option.width = "260";
-        this.option.height = "300";
+        this.baseUrl = this.baseurl ? this.baseurl : "https://oa.zsfund.com/ApiGateway/UserService";
+        //this.option.width= "260";
+        //this.option.height = "300";
     },
     mounted: function () {
         this.loadLastNodes();
     }
 });
-//# sourceMappingURL=zsfund-componet.js.map
+//# sourceMappingURL=zsfund-component.js.map

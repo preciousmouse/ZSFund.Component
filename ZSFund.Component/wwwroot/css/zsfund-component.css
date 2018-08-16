@@ -1,9 +1,39 @@
 ﻿.componydialog {
-    width: 500px;
     margin-top: 8vh !important;
 }
 
-.el-input{
+@media screen and (min-width:768px) {
+    .componydialog {
+        width: 520px;
+    }
+}
+@media only screen and (min-width: 480px) and (max-width: 767px) {
+    .componydialog {
+        width: 67%;
+    }
+}
+@media only screen and (max-width: 479px) {
+    .componydialog {
+        width: 95%;
+    }
+}
+/*@media screen and (min-width: 1200px){
+    
+}
+@media screen and (min-width: 960px) and (max-width: 1199px) {
+    
+}
+@media screen and (min-width: 768px) and (max-width: 959px) {
+    
+}
+@media only screen and (min-width: 480px) and (max-width: 767px) {
+    
+}
+@media only screen and (max-width: 479px) {
+    
+}*/
+
+.el-input {
     /*解决Edge浏览器上 input上的tags被input框覆盖的问题*/
     position: static;
 } 

@@ -79,3 +79,11 @@ detail部分
 		需要使用Date对象或者其他形式时，需要进行进出格式转换
 	5.2、Boolean类型也是用字符串传输
 		其他形式需要做转换
+
+
+bugs
+	1、 	DELETE 401问题
+	2、  metadata.ts代码修改						--solve
+			参考org.ts
+			引用component中的内容分离出来
+	3、	ie兼容性
