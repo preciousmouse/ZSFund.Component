@@ -7,27 +7,27 @@ class MetadataManage {
         DateTime: 2,
         Boolean: 3,
         Entities: 4,
-    }
+    };
+    public static mataCategoryTypeList = {
+        String: MetadataManage.MetadataProprertyTypeEnum.String,
+        Number: MetadataManage.MetadataProprertyTypeEnum.Number,
+        DateTime: MetadataManage.MetadataProprertyTypeEnum.DateTime,
+        Boolean: MetadataManage.MetadataProprertyTypeEnum.Boolean,
+        //Entities: MetadataManage.MetadataProprertyTypeEnum.Entities
+    };
     public Init() {
         this.vm = new Vue({
             el: "#app",
             data: {
                 //global
                 baseUrl: "http://10.10.0.175:8088",
-                mataCategoryTypeList: {
-                    String: MetadataManage.MetadataProprertyTypeEnum.String,
-                    Number: MetadataManage.MetadataProprertyTypeEnum.Number,
-                    DateTime: MetadataManage.MetadataProprertyTypeEnum.DateTime,
-                    Boolean: MetadataManage.MetadataProprertyTypeEnum.Boolean,
-                    //Entities: MetadataManage.MetadataProprertyTypeEnum.Entities
-                },
                 //tree
                 props: {
                     label: 'metaCategoryName',
                     children: 'inverseParent'
                 },
                 treeData: [],
-                metaTypeMap: {},
+                    //metaTypeMap: {},
                 //tree node logo
                 noPermissionPicSrc: "img/MetaCategory.png",
                 permissionPicSrc: "img/MetaCategoryWithPermission.png",
@@ -48,7 +48,9 @@ class MetadataManage {
                     permissionInherited: true
                 },
                 treeFormRules: {
-                    //name: [{ required: true, message: '请输入名称', trigger: 'blur'}],
+                    metaCategoryName: [{ required: true, message: '请输入名称', trigger: 'blur' }],
+                    metaCategoryType: [{ required: true, message: '请输入类型', trigger: 'blur' }],
+                    metaTreeData: [{ validator: this.treeEntityCheck, tigger: 'blur' }] 
                 },
                 formLabelWidth: '90px',
                 externSwitch: "off",
@@ -76,8 +78,15 @@ class MetadataManage {
                     isDeleted: false,
                 },
                 tableFormRules: {
-
+                    metaDetailName: [{ required: true, message: '请输入值名称', trigger: 'blur'}],
+                    metaDetailValue: [{ required: true, validator: this.tableEntityCheck, trigger: 'blur'}]
                 },
+                metaTableData: [{
+                    name: "",
+                    value: "",
+                    type: MetadataManage.MetadataProprertyTypeEnum.String,
+                    typeName: ""
+                }],
                 //date-picker
                 datePickerOptions: {
                     //disabledDate(time) {
@@ -105,16 +114,13 @@ class MetadataManage {
                     }]
                 },
                 //entity
-                metaTableData: [{
-                    name: "",
-                    value: "",
-                    type: MetadataManage.MetadataProprertyTypeEnum.String,
-                    typeName: ""
-                }],
             },
             methods: {
                 //global
-
+                showEntity: (row) => {
+                    return ((<any>this).vm.$refs.asideTree.getNode(row.metaCategoryId).data
+                        .metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities);
+                },
                 //tree      //this.$refs.asideTree
                 handleCurrentChange: (data, node)=> {
                     if (!node.isLeaf) {
@@ -180,7 +186,7 @@ class MetadataManage {
                     if (this.vm.$data.searchInput == "") {
                         return;
                     }
-                    this.vm.$data.setTableData({
+                    this.setTableData({
                         keyWord: this.vm.$data.searchInput
                     }, () => {
                         (<any>this).vm.handleTreeReset();
@@ -215,7 +221,8 @@ class MetadataManage {
                     if (node.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities) {
                         this.vm.$data.metaTableData = {
                             metaCategoryType: node.metaCategoryType,
-                            keyValueMetadata: JSON.parse(this.vm.$data.tableData[index].metaDetailValue)
+                            //keyValueMetadata: JSON.parse(this.vm.$data.tableData[index].metaDetailValue)
+                            keyValueMetadata: this.getKeyValueData(this.vm.$data.tableData[index])
                         };
                     }
                     this.vm.$data.tableDialogVisible = true;
@@ -238,8 +245,8 @@ class MetadataManage {
                             } else {
                                 this.tableFormConfirm();
                             }
+                            this.vm.$data.treeDialogVisible = false;
                         } else {
-                            console.log("error");
                             return false;
                         }
                     });
@@ -336,6 +343,14 @@ class MetadataManage {
         }
         return form;
     }
+    //把数组数据中的name-value整合为key-value对象
+    private getDetailJson(data) {
+        var res = {};
+        for (var i in data) {
+            res[data[i].name] = data[i].value;
+        }
+        return JSON.stringify(res);
+    }
 //tree
     //目录节点为Enitity时调用
     //得到enitity的各个属性名和类型
@@ -350,7 +365,7 @@ class MetadataManage {
             obj.keyValueMetadata.push({
                 name: entity[i].name,
                 type: parseInt(entity[i].type),
-                typeName: this.findkey(this.vm.$data.mataCategoryTypeList, parseInt(entity[i].type))
+                typeName: this.findkey(MetadataManage.mataCategoryTypeList, parseInt(entity[i].type))
             });
         }
         return obj;
@@ -393,12 +408,12 @@ class MetadataManage {
             for (var ele in this.vm.$data.metaTreeData) {
                 var name = this.vm.$data.metaTreeData[ele].name;
                 var type = this.vm.$data.metaTreeData[ele].type;
-                if (name != "") {
+                //if (name != "") {
                     obj.Entities.push({
                         "name": name,
                         "type": type.toString()
                     })
-                }
+                //}
             }
             this.vm.$data.treeForm = this.getForm({
                 keyValueMetadata: JSON.stringify(obj),
@@ -406,9 +421,18 @@ class MetadataManage {
             }, this.vm.$data.treeForm);
         }
         this.postTreeEdit();
-        this.vm.$data.treeDialogVisible = false;
+        //this.vm.$data.treeDialogVisible = false;
     }
 //table
+    //通过带name-value值的obj对象，返回key-value数组
+    private getKeyValueData(obj) {
+        var arr = this.getType(obj.metaCategoryId).keyValueMetadata;
+        var value = JSON.parse(obj.metaDetailValue);
+        for (var i in arr) {
+            arr[i].value = value[arr[i].name];
+        }
+        return arr;
+    }
     //通过api加载元数据表格
     private setTableData(obj, callback = null) {
         var url = this.vm.$data.baseUrl + "/api/MetadataManage/Detail";
@@ -416,7 +440,13 @@ class MetadataManage {
             this.vm.$data.tableData = data;
             console.log(data);
             this.vm.$data.tableDeleteVisible = Array(data == undefined ? 0 : data.length);
-            this.vm.$data.tableDeleteVisible.fill(false);
+            if ((<any>[]).fill) {
+                this.vm.$data.tableDeleteVisible.fill(false);
+            } else {//fill的兼容
+                for (var i in this.vm.$data.tableDeleteVisible) {
+                    this.vm.$data.tableDeleteVisible[i] = false;
+                }
+            }
             if (callback) {
                 callback();
             }
@@ -451,10 +481,11 @@ class MetadataManage {
         })
     }
 //tableform
-    tableFormConfirm() {
+    private tableFormConfirm() {
         if (this.vm.$data.tableForm.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities) {
             this.vm.$data.tableForm = this.getForm({
-                metaDetailValue: JSON.stringify(this.vm.$data.metaTableData.keyValueMetadata)
+                //metaDetailValue: JSON.stringify(this.vm.$data.metaTableData.keyValueMetadata)
+                metaDetailValue: this.getDetailJson(this.vm.$data.metaTableData.keyValueMetadata)
             }, this.vm.$data.tableForm);
         }
         this.postTableEdit();
@@ -463,6 +494,47 @@ class MetadataManage {
 //form validate
     private resetForm(formName) {
         (<any>this).vm.$refs[formName].resetFields();
+    }
+
+    private treeEntityCheck = (rule, value, callback) => {
+        if (this.vm.$data.treeForm.metaCategoryType != MetadataManage.MetadataProprertyTypeEnum.Entities) {
+            callback();
+        } else {
+            var arr = this.vm.$data.metaTreeData;
+            for (var i in arr) {
+                if (arr[i].name == "") {
+                    callback(new Error("请输入值名称"));
+                    return;
+                }
+            }
+            callback();
+        }
+        
+    }
+    private tableEntityCheck = (rule, value, callback) => {
+        if (this.vm.$data.tableForm.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Number) {
+            var number = this.vm.$data.tableForm.metaDetailValue;
+            if (((/^(-?\d+)(\.\d+)?$/)).test(number)) {
+                callback();
+            } else {
+                callback(new Error("请输入数字值"));
+            }
+        }else if (this.vm.$data.tableForm.metaCategoryType != MetadataManage.MetadataProprertyTypeEnum.Entities) {
+            if (this.vm.$data.tableForm.metaDetailValue === "" || this.vm.$data.tableForm.metaDetailValue===null) {
+                callback(new Error("请输入值"));
+            } else {
+                callback();
+            }
+        } else {
+            var arr = this.vm.$data.metaTableData.keyValueMetadata;
+            for (var i in arr) {
+                if (arr[i].value === undefined || arr[i].value===null ||arr[i].value==="") {
+                    callback(new Error("请输入值"))
+                    return;
+                }
+            }
+            callback();
+        }
     }
 }
 

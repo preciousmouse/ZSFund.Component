@@ -7,7 +7,7 @@
     <link rel="stylesheet" type="text/css" href="css/elementui-2.4.6.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" media="screen" href="css/font-awesome.min.css">
-    <!--<link rel="stylesheet" type="text/css" media="screen" href="css/zsfund-component.css">-->
+    <link rel="stylesheet" type="text/css" media="screen" href="css/metadatamanage.css">
     <script src="js/libs/jquery-3.2.1.min.js"></script>
     <script src="js/libs/bootstrap.min.js"></script>
     <script src="js/libs/vue.min.js"></script>
@@ -15,113 +15,6 @@
     <!--useing Class-->
     <script src="js/components/Common.js"></script>
     <script src="js/components/metadatamanage.js"></script>
-    <style>
-        .el-button i {
-            font-size: 18px;
-        }
-
-        html, body {
-            min-height: 100%;
-        }
-
-        #app, #app > .el-container {
-            height: 100%;
-            min-height: 100vh;
-        }
-
-        .content .el-header {
-            text-align: right;
-            padding: 20px 10px 0;
-        }
-
-        .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
-            background-color: #f0f7ff;
-        }
-
-        .el-aside {
-            background-color: rgb(238, 241, 246);
-            min-width: 220px;
-            max-width: 350px;
-        }
-
-            .el-aside .el-header {
-                /*background-color: #fff;*/
-            }
-
-            .el-aside .el-tree {
-                width: 100%;
-                padding: 10px;
-                margin: 2px;
-            }
-
-        .el-input {
-            width: auto !important;
-        }
-
-        .el-dialog .el-input input {
-            height: 32px;
-        }
-
-        .el-dialog .el-input .el-input__icon {
-            line-height: 32px;
-        }
-
-        .el-form-item {
-            margin-bottom: 14px;
-            max-width: 600px;
-        }
-
-        .el-form-item__label, .el-form-item__content {
-            line-height: 32px;
-        }
-
-        .el-form .el-table {
-            margin: 0;
-        }
-
-            .el-form .el-table td, .el-form .el-table th {
-                padding: 0;
-                border-width: 0;
-                height: 35px;
-                /*min-height: 35px;*/
-            }
-
-        .el-table {
-            width: 100%;
-            margin: 20px 0 20px 30px;
-            height: -webkit-fit-content;
-            height: -moz-fit-content;
-            height: fit-content;
-            /*max-height:100%;*/
-        }
-
-        .el-dialog .el-table::before {
-            height: 0;
-        }
-
-        .el-dialog {
-            width: -webkit-fit-content;
-            width: -moz-fit-content;
-            width: fit-content;
-        }
-
-        .el-dialog__body {
-            padding: 30px 20px 10px;
-        }
-
-
-        .el-switch .el-switch__core {
-            outline-width: 0 !important;
-        }
-
-        .asdie-tree-node {
-            vertical-align: middle;
-        }
-
-            .asdie-tree-node img {
-                width: 22px;
-            }
-    </style>
 </head>
 <body>
     <div id="app">
@@ -139,8 +32,8 @@
                                  highlight-current default-expand-all :expand-on-click-node="false"
                                  ref="asideTree" @current-change="handleCurrentChange">
                             <span class="asdie-tree-node" slot-scope="ele">
-                                <img v-if="ele.data.permissionInherited" :src="permissionPicSrc" />
-                                <img v-else :src="noPermissionPicSrc" />
+                                <img v-if="ele.data.permissionInherited" :src="noPermissionPicSrc" />
+                                <img v-else :src="permissionPicSrc" />
                                 <span>{{ ele.node.label }}</span>
                             </span>
                         </el-tree>
@@ -158,6 +51,14 @@
                         <el-table-column prop="metaDetailName" label="Key">
                         </el-table-column>
                         <el-table-column prop="metaDetailValue" label="Value">
+                            <template slot-scope="scope">
+                                <template v-if="showEntity(scope.row)">
+                                    <p v-for="(value,key) in JSON.parse(scope.row.metaDetailValue)">
+                                        {{key}}: {{value}}
+                                    </p>
+                                </template>
+                                <template v-else>{{scope.row.metaDetailValue}}</template>
+                            </template>
                         </el-table-column>
                         <el-table-column prop="sort" label="Index" :resizable="false" header-align="center" align="center" width="60">
                         </el-table-column>
@@ -189,26 +90,26 @@
                 <el-form-item label="父目录" :label-width="formLabelWidth">
                     <span>{{treeForm.metaCategoryPath}}</span>
                 </el-form-item>
-                <el-form-item label="名称" :label-width="formLabelWidth" prop="name">
+                <el-form-item label="名称" :label-width="formLabelWidth" prop="metaCategoryName">
                     <el-input v-model="treeForm.metaCategoryName" auto-complete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="值类型" :label-width="formLabelWidth">
+                <el-form-item label="值类型" :label-width="formLabelWidth" prop="metaCategoryType">
                     <el-select v-model="treeForm.metaCategoryType">
-                        <el-option v-for="(value,key) in mataCategoryTypeList"
+                        <el-option v-for="(value,key) in MetadataManage.mataCategoryTypeList"
                                    :label="key" :value="value"></el-option>
                         <el-option label="Entities" :value="MetadataManage.MetadataProprertyTypeEnum.Entities"></el-option>
                     </el-select>
                 </el-form-item>
-                <el-form-item label="实体属性" :label-width="formLabelWidth"
+                <el-form-item label="实体属性" :label-width="formLabelWidth" prop="metaTreeData"
                               v-if="treeForm.metaCategoryType==MetadataManage.MetadataProprertyTypeEnum.Entities">
                     <el-table :data="metaTreeData" cell-style="{border-width:0;}">
-                        <el-table-column prop="type" label="值类型" header-align="center" width="130">
+                        <el-table-column label="值类型" header-align="center" width="130">
                             <el-select slot-scope="scope" v-model="metaTreeData[scope.$index].type">
-                                <el-option v-for="(value,key) in mataCategoryTypeList"
+                                <el-option v-for="(value,key) in MetadataManage.mataCategoryTypeList"
                                            :label="key" :value="value"></el-option>
                             </el-select>
                         </el-table-column>
-                        <el-table-column prop="name" label="值名称" header-align="center" width="200">
+                        <el-table-column label="值名称" header-align="center" width="200">
                             <el-input slot-scope="scope" v-model="metaTreeData[scope.$index].name"></el-input>
                         </el-table-column>
                         <el-table-column header-align="center" width="50">
@@ -249,15 +150,12 @@
                 <el-form-item label="所在目录" :label-width="formLabelWidth">
                     <span>{{tableForm.categoryPath}}</span>
                 </el-form-item>
-                <el-form-item label="Key" :label-width="formLabelWidth">
+                <el-form-item label="Key" :label-width="formLabelWidth" prop="metaDetailName">
                     <el-input v-model="tableForm.metaDetailName" auto-complete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="Value" :label-width="formLabelWidth">
-                    <!--Number-->
-                    <el-input-number v-if="tableForm.metaCategoryType==MetadataManage.MetadataProprertyTypeEnum.Number"
-                                     v-model="tableForm.metaDetailValue" size="small"></el-input-number>
+                <el-form-item label="Value" :label-width="formLabelWidth" prop="metaDetailValue">
                     <!--Date-->
-                    <el-date-picker v-else-if="tableForm.metaCategoryType==MetadataManage.MetadataProprertyTypeEnum.DateTime"
+                    <el-date-picker v-if="tableForm.metaCategoryType==MetadataManage.MetadataProprertyTypeEnum.DateTime"
                                     v-model="tableForm.metaDetailValue" type="date" placeholder="选择日期"
                                     :picker-options="datePickerOptions" value-format="yyyy-MM-dd"></el-date-picker>
                     <!--Bool-->
@@ -272,13 +170,11 @@
                         <el-table-column prop="typeName" label="Type" header-align="center" align="center" width="90">
                         </el-table-column>
                         <el-table-column prop="name" label="Key" header-align="center" align="center" width="130">
-                            <!--<el-input slot-scope="scope" v-model="metaTableData[scope.$index].name"></el-input>-->
                         </el-table-column>
                         <el-table-column prop="value" label="Value" header-align="center" align="center" width="160">
-                            <!--<el-input slot-scope="scope" v-model="metaTableData.keyValueMetadata[scope.$index].value"></el-input>-->
                             <div slot-scope="scope">
-                                <el-input-number v-if="metaTableData.keyValueMetadata[scope.$index].type==MetadataManage.MetadataProprertyTypeEnum.Number"
-                                                 v-model="metaTableData.keyValueMetadata[scope.$index].value" size="small"></el-input-number>
+                                <el-input v-if="metaTableData.keyValueMetadata[scope.$index].type==MetadataManage.MetadataProprertyTypeEnum.Number"
+                                                 v-model.number="metaTableData.keyValueMetadata[scope.$index].value" size="small"></el-input>
                                 <el-date-picker v-else-if="metaTableData.keyValueMetadata[scope.$index].type==MetadataManage.MetadataProprertyTypeEnum.DateTime"
                                                 v-model="metaTableData.keyValueMetadata[scope.$index].value" type="date" placeholder="选择日期"
                                                 :picker-options="datePickerOptions" value-format="yyyy-MM-dd"></el-date-picker>
@@ -291,7 +187,9 @@
                             </div>
                         </el-table-column>
                     </el-table>
-                    <!--String and other unexcepted tpyes (default type)-->
+                    <!--Number-->
+                    <el-input v-else-if="tableForm.metaCategoryType==MetadataManage.MetadataProprertyTypeEnum.Number" v-model.number="tableForm.metaDetailValue" auto-complete="off"></el-input>
+                    <!--String other unexcepted tpyes (default type)-->
                     <el-input v-else v-model="tableForm.metaDetailValue" auto-complete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="Index" :label-width="formLabelWidth">

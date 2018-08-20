@@ -61,14 +61,14 @@ Category部分
 			会影响现有其他数据，造成请求500/401
 	2、	api删除
 			无法删除数据 401
-	3、	表单验证		
+	3、	表单验证											--solve	
 	4、	根据PermissionInherited值添加节点前icon			--solve
 
 
 detail部分
 	1、	api删除
 			无法删除数据 401
-	2、	表单验证
+	2、	表单验证											--solve
 			api上传时key、value都不能为空
 			验证key不为空，value设为类型初始值
 	3、	value类型根据节点设置表现为不同input形式			--solve
@@ -87,3 +87,13 @@ bugs
 			参考org.ts
 			引用component中的内容分离出来
 	3、	ie兼容性
+	4、	api，添加已存在名字的数据出现500
+			error捕获
+
+
+requset
+	1、 	entity数据显示格式						--solve
+			多行 key: value
+	2、 	entity类型数据格式						--solve
+	3、	number类型为实数
+			需要改成input:text 并添加数字约束		--solve

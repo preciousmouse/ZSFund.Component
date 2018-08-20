@@ -1,7 +1,52 @@
 //依赖Common.js进行ajax请求操作
 var MetadataManage = /** @class */ (function () {
     function MetadataManage() {
+        var _this = this;
         this.vm = null;
+        this.treeEntityCheck = function (rule, value, callback) {
+            if (_this.vm.$data.treeForm.metaCategoryType != MetadataManage.MetadataProprertyTypeEnum.Entities) {
+                callback();
+            }
+            else {
+                var arr = _this.vm.$data.metaTreeData;
+                for (var i in arr) {
+                    if (arr[i].name == "") {
+                        callback(new Error("请输入值名称"));
+                        return;
+                    }
+                }
+                callback();
+            }
+        };
+        this.tableEntityCheck = function (rule, value, callback) {
+            if (_this.vm.$data.tableForm.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Number) {
+                var number = _this.vm.$data.tableForm.metaDetailValue;
+                if (((/^(-?\d+)(\.\d+)?$/)).test(number)) {
+                    callback();
+                }
+                else {
+                    callback(new Error("请输入数字值"));
+                }
+            }
+            else if (_this.vm.$data.tableForm.metaCategoryType != MetadataManage.MetadataProprertyTypeEnum.Entities) {
+                if (_this.vm.$data.tableForm.metaDetailValue === "" || _this.vm.$data.tableForm.metaDetailValue === null) {
+                    callback(new Error("请输入值"));
+                }
+                else {
+                    callback();
+                }
+            }
+            else {
+                var arr = _this.vm.$data.metaTableData.keyValueMetadata;
+                for (var i in arr) {
+                    if (arr[i].value === undefined || arr[i].value === null || arr[i].value === "") {
+                        callback(new Error("请输入值"));
+                        return;
+                    }
+                }
+                callback();
+            }
+        };
     }
     MetadataManage.prototype.Init = function () {
         var _this = this;
@@ -10,19 +55,13 @@ var MetadataManage = /** @class */ (function () {
             data: {
                 //global
                 baseUrl: "http://10.10.0.175:8088",
-                mataCategoryTypeList: {
-                    String: MetadataManage.MetadataProprertyTypeEnum.String,
-                    Number: MetadataManage.MetadataProprertyTypeEnum.Number,
-                    DateTime: MetadataManage.MetadataProprertyTypeEnum.DateTime,
-                    Boolean: MetadataManage.MetadataProprertyTypeEnum.Boolean,
-                },
                 //tree
                 props: {
                     label: 'metaCategoryName',
                     children: 'inverseParent'
                 },
                 treeData: [],
-                metaTypeMap: {},
+                //metaTypeMap: {},
                 //tree node logo
                 noPermissionPicSrc: "img/MetaCategory.png",
                 permissionPicSrc: "img/MetaCategoryWithPermission.png",
@@ -43,7 +82,9 @@ var MetadataManage = /** @class */ (function () {
                     permissionInherited: true
                 },
                 treeFormRules: {
-                //name: [{ required: true, message: '请输入名称', trigger: 'blur'}],
+                    metaCategoryName: [{ required: true, message: '请输入名称', trigger: 'blur' }],
+                    metaCategoryType: [{ required: true, message: '请输入类型', trigger: 'blur' }],
+                    metaTreeData: [{ validator: this.treeEntityCheck, tigger: 'blur' }]
                 },
                 formLabelWidth: '90px',
                 externSwitch: "off",
@@ -70,7 +111,16 @@ var MetadataManage = /** @class */ (function () {
                     sort: 0,
                     isDeleted: false,
                 },
-                tableFormRules: {},
+                tableFormRules: {
+                    metaDetailName: [{ required: true, message: '请输入值名称', trigger: 'blur' }],
+                    metaDetailValue: [{ required: true, validator: this.tableEntityCheck, trigger: 'blur' }]
+                },
+                metaTableData: [{
+                        name: "",
+                        value: "",
+                        type: MetadataManage.MetadataProprertyTypeEnum.String,
+                        typeName: ""
+                    }],
                 //date-picker
                 datePickerOptions: {
                     //disabledDate(time) {
@@ -97,16 +147,13 @@ var MetadataManage = /** @class */ (function () {
                             }
                         }]
                 },
-                //entity
-                metaTableData: [{
-                        name: "",
-                        value: "",
-                        type: MetadataManage.MetadataProprertyTypeEnum.String,
-                        typeName: ""
-                    }],
             },
             methods: {
                 //global
+                showEntity: function (row) {
+                    return (_this.vm.$refs.asideTree.getNode(row.metaCategoryId).data
+                        .metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities);
+                },
                 //tree      //this.$refs.asideTree
                 handleCurrentChange: function (data, node) {
                     if (!node.isLeaf) {
@@ -172,7 +219,7 @@ var MetadataManage = /** @class */ (function () {
                     if (_this.vm.$data.searchInput == "") {
                         return;
                     }
-                    _this.vm.$data.setTableData({
+                    _this.setTableData({
                         keyWord: _this.vm.$data.searchInput
                     }, function () {
                         _this.vm.handleTreeReset();
@@ -206,7 +253,8 @@ var MetadataManage = /** @class */ (function () {
                     if (node.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities) {
                         _this.vm.$data.metaTableData = {
                             metaCategoryType: node.metaCategoryType,
-                            keyValueMetadata: JSON.parse(_this.vm.$data.tableData[index].metaDetailValue)
+                            //keyValueMetadata: JSON.parse(this.vm.$data.tableData[index].metaDetailValue)
+                            keyValueMetadata: _this.getKeyValueData(_this.vm.$data.tableData[index])
                         };
                     }
                     _this.vm.$data.tableDialogVisible = true;
@@ -230,9 +278,9 @@ var MetadataManage = /** @class */ (function () {
                             else {
                                 _this.tableFormConfirm();
                             }
+                            _this.vm.$data.treeDialogVisible = false;
                         }
                         else {
-                            console.log("error");
                             return false;
                         }
                     });
@@ -329,6 +377,14 @@ var MetadataManage = /** @class */ (function () {
         }
         return form;
     };
+    //把数组数据中的name-value整合为key-value对象
+    MetadataManage.prototype.getDetailJson = function (data) {
+        var res = {};
+        for (var i in data) {
+            res[data[i].name] = data[i].value;
+        }
+        return JSON.stringify(res);
+    };
     //tree
     //目录节点为Enitity时调用
     //得到enitity的各个属性名和类型
@@ -343,7 +399,7 @@ var MetadataManage = /** @class */ (function () {
             obj.keyValueMetadata.push({
                 name: entity[i].name,
                 type: parseInt(entity[i].type),
-                typeName: this.findkey(this.vm.$data.mataCategoryTypeList, parseInt(entity[i].type))
+                typeName: this.findkey(MetadataManage.mataCategoryTypeList, parseInt(entity[i].type))
             });
         }
         return obj;
@@ -389,12 +445,12 @@ var MetadataManage = /** @class */ (function () {
             for (var ele in this.vm.$data.metaTreeData) {
                 var name = this.vm.$data.metaTreeData[ele].name;
                 var type = this.vm.$data.metaTreeData[ele].type;
-                if (name != "") {
-                    obj.Entities.push({
-                        "name": name,
-                        "type": type.toString()
-                    });
-                }
+                //if (name != "") {
+                obj.Entities.push({
+                    "name": name,
+                    "type": type.toString()
+                });
+                //}
             }
             this.vm.$data.treeForm = this.getForm({
                 keyValueMetadata: JSON.stringify(obj),
@@ -402,9 +458,18 @@ var MetadataManage = /** @class */ (function () {
             }, this.vm.$data.treeForm);
         }
         this.postTreeEdit();
-        this.vm.$data.treeDialogVisible = false;
+        //this.vm.$data.treeDialogVisible = false;
     };
     //table
+    //通过带name-value值的obj对象，返回key-value数组
+    MetadataManage.prototype.getKeyValueData = function (obj) {
+        var arr = this.getType(obj.metaCategoryId).keyValueMetadata;
+        var value = JSON.parse(obj.metaDetailValue);
+        for (var i in arr) {
+            arr[i].value = value[arr[i].name];
+        }
+        return arr;
+    };
     //通过api加载元数据表格
     MetadataManage.prototype.setTableData = function (obj, callback) {
         var _this = this;
@@ -414,7 +479,14 @@ var MetadataManage = /** @class */ (function () {
             _this.vm.$data.tableData = data;
             console.log(data);
             _this.vm.$data.tableDeleteVisible = Array(data == undefined ? 0 : data.length);
-            _this.vm.$data.tableDeleteVisible.fill(false);
+            if ([].fill) {
+                _this.vm.$data.tableDeleteVisible.fill(false);
+            }
+            else { //fill的兼容
+                for (var i in _this.vm.$data.tableDeleteVisible) {
+                    _this.vm.$data.tableDeleteVisible[i] = false;
+                }
+            }
             if (callback) {
                 callback();
             }
@@ -455,7 +527,8 @@ var MetadataManage = /** @class */ (function () {
     MetadataManage.prototype.tableFormConfirm = function () {
         if (this.vm.$data.tableForm.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities) {
             this.vm.$data.tableForm = this.getForm({
-                metaDetailValue: JSON.stringify(this.vm.$data.metaTableData.keyValueMetadata)
+                //metaDetailValue: JSON.stringify(this.vm.$data.metaTableData.keyValueMetadata)
+                metaDetailValue: this.getDetailJson(this.vm.$data.metaTableData.keyValueMetadata)
             }, this.vm.$data.tableForm);
         }
         this.postTableEdit();
@@ -471,6 +544,12 @@ var MetadataManage = /** @class */ (function () {
         DateTime: 2,
         Boolean: 3,
         Entities: 4,
+    };
+    MetadataManage.mataCategoryTypeList = {
+        String: MetadataManage.MetadataProprertyTypeEnum.String,
+        Number: MetadataManage.MetadataProprertyTypeEnum.Number,
+        DateTime: MetadataManage.MetadataProprertyTypeEnum.DateTime,
+        Boolean: MetadataManage.MetadataProprertyTypeEnum.Boolean,
     };
     return MetadataManage;
 }());
