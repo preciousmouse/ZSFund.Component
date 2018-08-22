@@ -15,6 +15,17 @@ class MetadataManage {
         Boolean: MetadataManage.MetadataProprertyTypeEnum.Boolean,
         //Entities: MetadataManage.MetadataProprertyTypeEnum.Entities
     };
+    public static metadataPermissionEnum = {
+        None: 0,
+        /// <summary>
+        /// 列举子目录
+        /// </summary>
+        List: 1,
+        Read: 2,
+        Add: 4,
+        Edit: 8,
+        Delete: 16
+    };
     public Init() {
         this.vm = new Vue({
             el: "#app",
@@ -63,6 +74,7 @@ class MetadataManage {
                 //table
                 tableData: [],
                 tableDeleteVisible: [],
+                tableAddPermission: false,
                 //table form
                 tableDialogVisible: false,
                 tableForm: {
@@ -208,7 +220,7 @@ class MetadataManage {
                     if (node.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities) {
                         this.vm.$data.metaTableData = this.getType(node.objectId);
                     }
-                    this.vm.$data.tableDeleteVisible.push(false);
+                    //this.vm.$data.tableDeleteVisible.push(false);
                     this.vm.$data.tableDialogVisible = true;
                 },
                 handleTableEdit: (index, row)=> {
@@ -351,6 +363,10 @@ class MetadataManage {
         }
         return JSON.stringify(res);
     }
+//message
+    private showMessage(option) {// { message:"", type:"success" }
+        (<any>this).vm.$message(option);
+    }
 //tree
     //目录节点为Enitity时调用
     //得到enitity的各个属性名和类型
@@ -436,10 +452,39 @@ class MetadataManage {
     //通过api加载元数据表格
     private setTableData(obj, callback = null) {
         var url = this.vm.$data.baseUrl + "/api/MetadataManage/Detail";
+        var type = obj.keyWord == undefined;//false为搜索
         Common.InvokeWebApi(url, "GET", "error", obj, true, (data) => {
-            this.vm.$data.tableData = data;
-            console.log(data);
-            this.vm.$data.tableDeleteVisible = Array(data == undefined ? 0 : data.length);
+            //console.log(data, this, type);
+            //根据权限进行元数据筛选 默认&List存在
+            this.vm.$data.tableData = [];//data;
+            if (data != undefined && data) {
+                for (var i in data) {
+                    var permission = (<any>this).vm.$refs.asideTree.getNode(data[i].metaCategoryId).data.permission;
+                    //元数据可读性（是否显示）
+                        //test
+                        //permission = MetadataManage.metadataPermissionEnum.List
+                        //    | MetadataManage.metadataPermissionEnum.Read
+                        //    | MetadataManage.metadataPermissionEnum.Add
+                        //    | MetadataManage.metadataPermissionEnum.Edit
+                        //    | MetadataManage.metadataPermissionEnum.Delete;
+                    if (permission & MetadataManage.metadataPermissionEnum.Read) {
+                        data[i].editPermission = permission & MetadataManage.metadataPermissionEnum.Edit ? true : false;
+                        data[i].deletePermission = permission & MetadataManage.metadataPermissionEnum.Delete ? true : false;
+                        this.vm.$data.tableData.push(data[i]);
+                    }
+                }
+            }
+            //添加按钮可用性
+            //if (type) {
+            //    this.vm.$data.tableAddPermission = ((<any>this).vm.$refs.asideTree.getCurrentNode().permission & 4) !=0;
+            //} else {
+            //    this.vm.$data.tableAddPermission = false;
+            //}
+            this.vm.$data.tableAddPermission = type && (
+                ((<any>this).vm.$refs.asideTree.getCurrentNode().permission & MetadataManage.metadataPermissionEnum.Add) != 0
+            );
+            //删除按钮操作依赖
+            this.vm.$data.tableDeleteVisible = Array(this.vm.$data.tableData == undefined ? 0 : this.vm.$data.tableData.length);
             if ((<any>[]).fill) {
                 this.vm.$data.tableDeleteVisible.fill(false);
             } else {//fill的兼容
@@ -521,7 +566,7 @@ class MetadataManage {
             }
         }else if (this.vm.$data.tableForm.metaCategoryType != MetadataManage.MetadataProprertyTypeEnum.Entities) {
             if (this.vm.$data.tableForm.metaDetailValue === "" || this.vm.$data.tableForm.metaDetailValue===null) {
-                callback(new Error("请输入值"));
+                callback(new Error("请输入Value项"));
             } else {
                 callback();
             }
@@ -529,7 +574,7 @@ class MetadataManage {
             var arr = this.vm.$data.metaTableData.keyValueMetadata;
             for (var i in arr) {
                 if (arr[i].value === undefined || arr[i].value===null ||arr[i].value==="") {
-                    callback(new Error("请输入值"))
+                    callback(new Error("请输入Value项"))
                     return;
                 }
             }

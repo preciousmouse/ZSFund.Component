@@ -44,7 +44,7 @@
                 <el-header height="auto">
                     <el-input v-model="searchInput" placeholder="请输入内容"></el-input>
                     <el-button icon="el-icon-search" circle @click="handleSearch"></el-button>
-                    <el-button icon="el-icon-plus" circle @click="handleTableAdd"></el-button>
+                    <el-button icon="el-icon-plus" circle @click="handleTableAdd" :disabled="!tableAddPermission"></el-button>
                 </el-header>
                 <el-container>
                     <el-table :data="tableData" border>
@@ -66,14 +66,16 @@
                         </el-table-column>
                         <el-table-column prop="operation" label="" width="95">
                             <template slot-scope="scope">
-                                <el-button icon="el-icon-edit" size="mini" circle @click="handleTableEdit(scope.$index, scope.row)"></el-button>
+                                <el-button icon="el-icon-edit" size="mini" circle @click="handleTableEdit(scope.$index, scope.row)" 
+                                           :disabled="!scope.row.editPermission"></el-button>
                                 <el-popover placement="top" width="160" v-model="tableDeleteVisible[scope.$index]">
                                     <p>确定删除？</p>
                                     <div style="text-align: right; margin: 0">
-                                        <el-button size="mini" type="text" @click="tableDeleteVisible[scope.$index]=false">取消</el-button>
-                                        <el-button type="primary" size="mini" @click="tableDeleteVisible[scope.$index]=false;handleTableDelete(scope.$index, scope.row)">确定</el-button>
+                                        <el-button size="mini" type="text" @click="tableDeleteVisible.splice(scope.$index,1,false);">取消</el-button>
+                                        <el-button type="primary" size="mini" @click="handleTableDelete(scope.$index, scope.row);tableDeleteVisible.splice(scope.$index,1,false);">确定</el-button>
                                     </div>
-                                    <el-button slot="reference" icon="el-icon-delete" type="danger" size="mini" circle @click="tableDeleteVisible[scope.$index]=true"></el-button>
+                                    <el-button slot="reference" icon="el-icon-delete" type="danger" size="mini" circle @click="tableDeleteVisible.splice(scope.$index,1,true);"
+                                               :disabled="!scope.row.deletePermission"></el-button>
                                 </el-popover>
                             </template>
                         </el-table-column>
