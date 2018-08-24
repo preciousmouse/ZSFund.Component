@@ -307,7 +307,9 @@ Vue.component('zsfund-origination-tree', {
                     if (this.findIndex(data, function (e) { return e.id==nodes[i].id}) >= 0) {
                         //默认未加载的节点不会被选中
                         //所以认为nodes[i]未被选中
-                        this.$refs.tree.setChecked(nodes[i],true);
+                        if (this.options.multiple) {//单选模式第一次改变选择时有bug，未修复
+                            this.$refs.tree.setChecked(nodes[i], true);
+                        }
                     }
                 }
             })
@@ -374,6 +376,7 @@ Vue.component('zsfund-origination-tree', {
                 //this.$refs.tree.setChecked(data[0], true);
                 if (this.selectNodes == "" || this.selectNodes.id != data[0].id) {
                     this.selectNodes = this.options.setArrayFromData(data[0]);
+                    //this.$refs.tree.setChecked(data[0].id, true)
                 }
             }
         },
@@ -476,7 +479,7 @@ Vue.component("zsfund-origination-input-select", {
                     <el-input v-show="tags.length==0" placeholder="请输入内容"></el-input>
                 </div>
                 <el-dialog :visible.sync="dialogVisible" :width="300" custom-class="componydialog"
-                        :modal-append-to-body="false" :close-on-click-modal="false">
+                        :modal-append-to-body="false" :close-on-click-modal="false" append-to-body="true">
                     <zsfund-origination-tree :prevnodes="prevNodes" :options="option" 
                         ref="orgTree" :baseurl="baseUrl" :dialog="dialogVisible"
                         v-on:getvalue="setValue" v-on:cancelbutton="dialogVisible=false;"
@@ -498,7 +501,11 @@ Vue.component("zsfund-origination-input-select", {
             //三者使用同一块内存？
             //this.tags = this.selectData;//并不是呢
 
-            this.tags = $.extend(true, [], this.selectData).sort((a, b) => { return b.data.unitType - a.data.unitType; });
+            if (this.options.multiple) {
+                this.tags = $.extend(true, [], this.selectData).sort((a, b) => { return b.data.unitType - a.data.unitType; });
+            } else {
+                this.tags = this.selectData === "" ? "" : $.extend(true, {}, this.selectData);
+            }
 
             if (this.prevNodes && this.prevNodes.length) {
                 if (!this.options.multiple && this.firstload) {

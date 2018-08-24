@@ -21,7 +21,7 @@
     <div id="components-demo">
         <zsfund-stock-select v-model="secCode" @change="change" size="mini"></zsfund-stock-select>
         <input type="button" v-on:click="showCode" value="show secCode" />
-        <zsfund-origination-input-select :options="OrgOptions" v-model="str"></zsfund-origination-input-select>
+        <!--<zsfund-origination-input-select :options="OrgOptions" v-model="str"></zsfund-origination-input-select>-->
         <zsfund-origination-input-select :options="OrgOptions" v-model="str2"></zsfund-origination-input-select>
         <el-button @click="showNodes">console log: nodes</el-button>
     </div>

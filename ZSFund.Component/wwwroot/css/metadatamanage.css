@@ -31,6 +31,7 @@ p{
 
     .el-aside .el-header {
         /*background-color: #fff;*/
+        text-align: center;
     }
 
     .el-aside .el-tree {
@@ -43,12 +44,12 @@ p{
     width: auto !important;
 }
 
-.el-dialog .el-input input {
+.el-dialog:not(.permissionDialog) .el-input input {
     height: 32px;
     line-height: 32px;
 }
 
-.el-dialog .el-input .el-input__icon {
+.el-dialog:not(.permissionDialog) .el-input .el-input__icon {
     line-height: 32px;
 }
 
@@ -71,6 +72,10 @@ p{
         height: 35px;
         /*min-height: 35px;*/
     }
+
+.el-table.permissionTable{
+    margin: 0;
+}
 
 .el-table {
     width: 100%;
@@ -107,3 +112,18 @@ p{
     .asdie-tree-node img {
         width: 16px;
     }
+
+.permissionDialog .el-dialog__body{
+    position: relative;
+}
+.permissionAdd{
+    position: absolute;
+    top: 22px;
+    left: 30px;
+    z-index: 99;
+}
+
+.el-checkbox-group[name=permissionCheck] .el-checkbox {
+    margin-left: 10px;
+    margin-right: 10px;
+}

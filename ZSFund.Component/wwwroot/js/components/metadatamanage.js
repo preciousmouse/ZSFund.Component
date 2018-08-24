@@ -55,13 +55,13 @@ var MetadataManage = /** @class */ (function () {
             data: {
                 //global
                 baseUrl: "http://10.10.0.175:8088",
+                isAdmin: false,
                 //tree
                 props: {
                     label: 'metaCategoryName',
                     children: 'inverseParent'
                 },
                 treeData: [],
-                //metaTypeMap: {},
                 //tree node logo
                 noPermissionPicSrc: "img/MetaCategory.png",
                 permissionPicSrc: "img/MetaCategoryWithPermission.png",
@@ -92,12 +92,20 @@ var MetadataManage = /** @class */ (function () {
                         name: "",
                         type: MetadataManage.MetadataProprertyTypeEnum.String
                     }],
+                //tree permission
+                treePermissionDialogVisible: false,
+                treePermission: [],
+                selectOption: {
+                    multiple: true,
+                    chosenType: OrgBasePara.OrgSelectType.Employee
+                },
                 //search
                 searchInput: "",
                 //table
                 tableData: [],
                 tableDeleteVisible: [],
                 tableAddPermission: false,
+                tableButtonWidth: 95,
                 //table form
                 tableDialogVisible: false,
                 tableForm: {
@@ -215,6 +223,42 @@ var MetadataManage = /** @class */ (function () {
                 handleTreeFormDelete: function (index, row) {
                     _this.vm.$data.metaTreeData.splice(index, 1);
                 },
+                //tree permission
+                handleTreePermission: function () {
+                    var node = _this.vm.$refs.asideTree.getCurrentNode();
+                    if (node === null) {
+                        return;
+                    }
+                    _this.vm.$data.treePermissionDialogVisible = true;
+                    _this.getPermission(node.objectId);
+                    //this.vm.$data.treePermission = [];
+                },
+                handlePermissionAdd: function () {
+                    _this.vm.$data.treePermission.push({
+                        memberId: "",
+                        permission: MetadataManage.metadataPermissionEnum.List,
+                        checkList: []
+                    });
+                },
+                handlePermissionDelete: function (index, row) {
+                    _this.vm.$data.treePermission.splice(index, 1);
+                },
+                handlePermissionConfirm: function () {
+                    var list = [];
+                    for (var i in _this.vm.$data.treePermission) {
+                        var obj = _this.vm.$data.treePermission[i];
+                        for (var j in obj.checkList) {
+                            obj.permission |= obj.checkList[j];
+                        }
+                        if (obj.memberId != "") {
+                            list.push(obj);
+                        }
+                    }
+                    _this.vm.$data.treePermissionDialogVisible = false;
+                    _this.vm.$data.treePermission = list;
+                    //post api
+                    console.log(_this.vm.$data.treePermission);
+                },
                 //table
                 handleSearch: function () {
                     if (_this.vm.$data.searchInput == "") {
@@ -276,10 +320,11 @@ var MetadataManage = /** @class */ (function () {
                             if (formName == 'treeForm') {
                                 _this.treeFormConfirm();
                             }
-                            else {
+                            else if (formName == "tableForm") {
                                 _this.tableFormConfirm();
                             }
-                            _this.vm.$data.treeDialogVisible = false;
+                            else {
+                            }
                         }
                         else {
                             return false;
@@ -386,6 +431,28 @@ var MetadataManage = /** @class */ (function () {
         }
         return JSON.stringify(res);
     };
+    //统计二进制有效位数
+    MetadataManage.prototype.getBitCount = function (number) {
+        var count = 0;
+        while (number) {
+            count += number & 1;
+            number /= 2;
+        }
+        return count;
+    };
+    //返回二进制位对应的数字数组
+    MetadataManage.prototype.getBitArray = function (number) {
+        var base = 1;
+        var res = [];
+        while (number > 0) {
+            if (number & base) {
+                res.push(base);
+                number ^= base;
+            }
+            base <<= 1;
+        }
+        return res;
+    };
     //message
     MetadataManage.prototype.showMessage = function (option) {
         this.vm.$message(option);
@@ -417,6 +484,10 @@ var MetadataManage = /** @class */ (function () {
             _this.vm.$data.treeData = data;
             //this.calcTypeMap(data);
             console.log(_this.vm.$data.treeData);
+        });
+        url = this.vm.$data.baseUrl + "/api/MetadataManage/IsAdmin";
+        Common.InvokeWebApi(url, "GET", "error", "", true, function (data) {
+            _this.vm.$data.isAdmin = data;
         });
     };
     //通过api进行目录树节点的添加/修改操作
@@ -462,8 +533,26 @@ var MetadataManage = /** @class */ (function () {
                 metaCategoryPath: this.vm.$data.treeForm.metaCategoryPath + "/" + this.vm.$data.treeForm.metaCategoryName
             }, this.vm.$data.treeForm);
         }
+        this.vm.$data.treeDialogVisible = false;
         this.postTreeEdit();
-        //this.vm.$data.treeDialogVisible = false;
+    };
+    //tree permission
+    MetadataManage.prototype.getPermission = function (id) {
+        var _this = this;
+        if (id === void 0) { id = 0; }
+        if (id == undefined || id == 0) {
+            this.vm.$data.treePermission = [];
+            return;
+        }
+        var url = this.vm.$data.baseUrl + "/api/MetadataManage/Permission?categoryId=" + id;
+        Common.InvokeWebApi(url, "GET", "error", "", true, function (data) {
+            for (var i in data) {
+                data[i].checkList = _this.getBitArray(data[i].permission);
+            }
+            _this.vm.$data.treePermission = data;
+        });
+    };
+    MetadataManage.prototype.postPermission = function (permission) {
     };
     //table
     //通过带name-value值的obj对象，返回key-value数组
@@ -486,28 +575,33 @@ var MetadataManage = /** @class */ (function () {
             //根据权限进行元数据筛选 默认&List存在
             _this.vm.$data.tableData = []; //data;
             if (data != undefined && data) {
+                //记录每列最多有多少按钮
+                var buttonCount = 0;
                 for (var i in data) {
                     var permission = _this.vm.$refs.asideTree.getNode(data[i].metaCategoryId).data.permission;
-                    //元数据可读性（是否显示）
                     //test
-                    //permission = MetadataManage.metadataPermissionEnum.List
-                    //    | MetadataManage.metadataPermissionEnum.Read
-                    //    | MetadataManage.metadataPermissionEnum.Add
-                    //    | MetadataManage.metadataPermissionEnum.Edit
-                    //    | MetadataManage.metadataPermissionEnum.Delete;
+                    permission = (MetadataManage.metadataPermissionEnum.List
+                        | MetadataManage.metadataPermissionEnum.Read
+                        //| MetadataManage.metadataPermissionEnum.Add
+                        | Math.floor(Math.random() * 2) * MetadataManage.metadataPermissionEnum.Edit
+                        | Math.floor(Math.random() * 2) * MetadataManage.metadataPermissionEnum.Delete);
+                    //元数据可读性（是否显示）
                     if (permission & MetadataManage.metadataPermissionEnum.Read) {
                         data[i].editPermission = permission & MetadataManage.metadataPermissionEnum.Edit ? true : false;
                         data[i].deletePermission = permission & MetadataManage.metadataPermissionEnum.Delete ? true : false;
                         _this.vm.$data.tableData.push(data[i]);
+                        if (data[i].editPermission) {
+                            buttonCount |= 1;
+                        }
+                        if (data[i].deletePermission) {
+                            buttonCount |= 2;
+                        }
                     }
                 }
+                //根据按钮数调整列宽度
+                _this.vm.$data.tableButtonWidth = 20 + _this.getBitCount(buttonCount) * 38;
             }
             //添加按钮可用性
-            //if (type) {
-            //    this.vm.$data.tableAddPermission = ((<any>this).vm.$refs.asideTree.getCurrentNode().permission & 4) !=0;
-            //} else {
-            //    this.vm.$data.tableAddPermission = false;
-            //}
             _this.vm.$data.tableAddPermission = type && ((_this.vm.$refs.asideTree.getCurrentNode().permission & MetadataManage.metadataPermissionEnum.Add) != 0);
             //删除按钮操作依赖
             _this.vm.$data.tableDeleteVisible = Array(_this.vm.$data.tableData == undefined ? 0 : _this.vm.$data.tableData.length);
@@ -555,7 +649,7 @@ var MetadataManage = /** @class */ (function () {
             }
         });
     };
-    //tableform
+    //tree tableform
     MetadataManage.prototype.tableFormConfirm = function () {
         if (this.vm.$data.tableForm.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities) {
             this.vm.$data.tableForm = this.getForm({
@@ -563,8 +657,8 @@ var MetadataManage = /** @class */ (function () {
                 metaDetailValue: this.getDetailJson(this.vm.$data.metaTableData.keyValueMetadata)
             }, this.vm.$data.tableForm);
         }
-        this.postTableEdit();
         this.vm.$data.tableDialogVisible = false;
+        this.postTableEdit();
     };
     //form validate
     MetadataManage.prototype.resetForm = function (formName) {

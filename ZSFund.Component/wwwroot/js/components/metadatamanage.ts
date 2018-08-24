@@ -32,13 +32,13 @@ class MetadataManage {
             data: {
                 //global
                 baseUrl: "http://10.10.0.175:8088",
+                isAdmin: false,
                 //tree
                 props: {
                     label: 'metaCategoryName',
                     children: 'inverseParent'
                 },
                 treeData: [],
-                    //metaTypeMap: {},
                 //tree node logo
                 noPermissionPicSrc: "img/MetaCategory.png",
                 permissionPicSrc: "img/MetaCategoryWithPermission.png",
@@ -69,12 +69,20 @@ class MetadataManage {
                     name: "",
                     type: MetadataManage.MetadataProprertyTypeEnum.String
                 }],
+                //tree permission
+                treePermissionDialogVisible: false,
+                treePermission: [],
+                selectOption: {
+                    multiple: true,
+                    chosenType: OrgBasePara.OrgSelectType.Employee
+                },
                 //search
                 searchInput: "",
                 //table
                 tableData: [],
                 tableDeleteVisible: [],
                 tableAddPermission: false,
+                tableButtonWidth: 95,
                 //table form
                 tableDialogVisible: false,
                 tableForm: {
@@ -193,6 +201,43 @@ class MetadataManage {
                 handleTreeFormDelete: (index, row)=> {
                     this.vm.$data.metaTreeData.splice(index, 1);
                 },
+                //tree permission
+                handleTreePermission: () => {
+                    var node = (<any>this).vm.$refs.asideTree.getCurrentNode();
+                    if (node === null) {
+                        return;
+                    }
+
+                    this.vm.$data.treePermissionDialogVisible = true;
+                    this.getPermission(node.objectId);
+                    //this.vm.$data.treePermission = [];
+                },
+                handlePermissionAdd: () => {
+                    this.vm.$data.treePermission.push({
+                        memberId: "",
+                        permission: MetadataManage.metadataPermissionEnum.List,
+                        checkList: []
+                    });
+                },
+                handlePermissionDelete: (index, row) => {
+                    this.vm.$data.treePermission.splice(index, 1);
+                },
+                handlePermissionConfirm: () => {
+                    var list = [];
+                    for (var i in this.vm.$data.treePermission) {
+                        var obj = this.vm.$data.treePermission[i];
+                        for (var j in obj.checkList) {
+                            obj.permission |= obj.checkList[j];
+                        }
+                        if (obj.memberId != "") {
+                            list.push(obj);
+                        }
+                    }
+                    this.vm.$data.treePermissionDialogVisible = false;
+                    this.vm.$data.treePermission = list; 
+                    //post api
+                    console.log(this.vm.$data.treePermission);
+                },
                 //table
                 handleSearch: ()=> {
                     if (this.vm.$data.searchInput == "") {
@@ -254,10 +299,11 @@ class MetadataManage {
                             //eval("this." + formName + "Confirm()");
                             if (formName == 'treeForm') {
                                 this.treeFormConfirm();
-                            } else {
+                            } else if (formName == "tableForm") {
                                 this.tableFormConfirm();
+                            } else {
+
                             }
-                            this.vm.$data.treeDialogVisible = false;
                         } else {
                             return false;
                         }
@@ -363,6 +409,28 @@ class MetadataManage {
         }
         return JSON.stringify(res);
     }
+    //统计二进制有效位数
+    private getBitCount(number) {
+        var count = 0;
+        while (number) {
+            count += number & 1;
+            number /= 2;
+        }
+        return count;
+    }
+    //返回二进制位对应的数字数组
+    private getBitArray(number) {
+        var base = 1;
+        var res = [];
+        while (number > 0) {
+            if (number & base) {
+                res.push(base);
+                number ^= base;
+            }
+            base <<= 1;
+        }
+        return res;
+    }
 //message
     private showMessage(option) {// { message:"", type:"success" }
         (<any>this).vm.$message(option);
@@ -393,6 +461,10 @@ class MetadataManage {
             this.vm.$data.treeData = data;
             //this.calcTypeMap(data);
             console.log(this.vm.$data.treeData);
+        });
+        url = this.vm.$data.baseUrl + "/api/MetadataManage/IsAdmin";
+        Common.InvokeWebApi(url, "GET", "error", "", true, (data) => {
+            this.vm.$data.isAdmin = data;
         });
     }
     //通过api进行目录树节点的添加/修改操作
@@ -436,8 +508,25 @@ class MetadataManage {
                 metaCategoryPath: this.vm.$data.treeForm.metaCategoryPath + "/" + this.vm.$data.treeForm.metaCategoryName
             }, this.vm.$data.treeForm);
         }
+        this.vm.$data.treeDialogVisible = false;
         this.postTreeEdit();
-        //this.vm.$data.treeDialogVisible = false;
+    }
+//tree permission
+    private getPermission(id = 0) {
+        if (id == undefined || id == 0) {
+            this.vm.$data.treePermission = [];
+            return;
+        }
+        var url = this.vm.$data.baseUrl + "/api/MetadataManage/Permission?categoryId=" + id;
+        Common.InvokeWebApi(url, "GET", "error", "", true, (data) => {
+            for (var i in data) {
+                data[i].checkList = this.getBitArray(data[i].permission);
+            }
+            this.vm.$data.treePermission = data;
+        });
+    }
+    private postPermission(permission) {
+
     }
 //table
     //通过带name-value值的obj对象，返回key-value数组
@@ -458,28 +547,35 @@ class MetadataManage {
             //根据权限进行元数据筛选 默认&List存在
             this.vm.$data.tableData = [];//data;
             if (data != undefined && data) {
+                //记录每列最多有多少按钮
+                var buttonCount = 0b0;
                 for (var i in data) {
                     var permission = (<any>this).vm.$refs.asideTree.getNode(data[i].metaCategoryId).data.permission;
-                    //元数据可读性（是否显示）
                         //test
-                        //permission = MetadataManage.metadataPermissionEnum.List
-                        //    | MetadataManage.metadataPermissionEnum.Read
-                        //    | MetadataManage.metadataPermissionEnum.Add
-                        //    | MetadataManage.metadataPermissionEnum.Edit
-                        //    | MetadataManage.metadataPermissionEnum.Delete;
+                        permission = (
+                            MetadataManage.metadataPermissionEnum.List
+                            | MetadataManage.metadataPermissionEnum.Read
+                            //| MetadataManage.metadataPermissionEnum.Add
+                            | Math.floor(Math.random() * 2) * MetadataManage.metadataPermissionEnum.Edit
+                            | Math.floor(Math.random() * 2) * MetadataManage.metadataPermissionEnum.Delete
+                    );
+                    //元数据可读性（是否显示）
                     if (permission & MetadataManage.metadataPermissionEnum.Read) {
                         data[i].editPermission = permission & MetadataManage.metadataPermissionEnum.Edit ? true : false;
                         data[i].deletePermission = permission & MetadataManage.metadataPermissionEnum.Delete ? true : false;
                         this.vm.$data.tableData.push(data[i]);
+                        if (data[i].editPermission) {
+                            buttonCount |= 0b1;
+                        }
+                        if (data[i].deletePermission) {
+                            buttonCount |= 0b10;
+                        }
                     }
                 }
+                //根据按钮数调整列宽度
+                this.vm.$data.tableButtonWidth = 20 + this.getBitCount(buttonCount) * 38;
             }
             //添加按钮可用性
-            //if (type) {
-            //    this.vm.$data.tableAddPermission = ((<any>this).vm.$refs.asideTree.getCurrentNode().permission & 4) !=0;
-            //} else {
-            //    this.vm.$data.tableAddPermission = false;
-            //}
             this.vm.$data.tableAddPermission = type && (
                 ((<any>this).vm.$refs.asideTree.getCurrentNode().permission & MetadataManage.metadataPermissionEnum.Add) != 0
             );
@@ -525,7 +621,7 @@ class MetadataManage {
             }
         })
     }
-//tableform
+//tree tableform
     private tableFormConfirm() {
         if (this.vm.$data.tableForm.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities) {
             this.vm.$data.tableForm = this.getForm({
@@ -533,8 +629,8 @@ class MetadataManage {
                 metaDetailValue: this.getDetailJson(this.vm.$data.metaTableData.keyValueMetadata)
             }, this.vm.$data.tableForm);
         }
-        this.postTableEdit();
         this.vm.$data.tableDialogVisible = false;
+        this.postTableEdit();
     }
 //form validate
     private resetForm(formName) {

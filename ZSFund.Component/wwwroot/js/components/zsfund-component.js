@@ -267,7 +267,9 @@ Vue.component('zsfund-origination-tree', {
                     if (_this.findIndex(data, function (e) { return e.id == nodes[i].id; }) >= 0) {
                         //默认未加载的节点不会被选中
                         //所以认为nodes[i]未被选中
-                        _this.$refs.tree.setChecked(nodes[i], true);
+                        if (_this.options.multiple) { //单选模式第一次改变选择时有bug，未修复
+                            _this.$refs.tree.setChecked(nodes[i], true);
+                        }
                     }
                 }
             });
@@ -335,6 +337,7 @@ Vue.component('zsfund-origination-tree', {
                 //this.$refs.tree.setChecked(data[0], true);
                 if (this.selectNodes == "" || this.selectNodes.id != data[0].id) {
                     this.selectNodes = this.options.setArrayFromData(data[0]);
+                    //this.$refs.tree.setChecked(data[0].id, true)
                 }
             }
         },
@@ -415,7 +418,7 @@ Vue.component("zsfund-origination-input-select", {
         };
     },
     props: ['options', 'value', 'baseurl'],
-    template: "\n        <div>\n            <div v-if=\"options.disabled\">\n                <el-input :disabled=\"true\" placeholder=\"\u8BF7\u8F93\u5165\u5185\u5BB9\"></el-input></div>\n            <div v-else>\n                <div class=\"select\" @click=\"dialogVisible = true\" style=\"position:relative;\">\n                    <span class=\"tags\" style=\"position:absolute;top: 20%;\">\n                        <el-tag v-for=\"tag in tags\" :key=\"tag\" size=\"small\" style=\"margin-left: 6px;\"\n                                closable @close=\"closeTag(tag)\" :disable-transitions=\"true\">\n                            <i v-if=\"tag.type=='department'\" class=\"fa fa-university\"></i>\n                            <i v-else-if=\"tag.type=='group'\" class=\"fa fa-users\"></i>\n                            <i v-else-if=\"tag.type=='manager'\" class=\"fa fa-user-secret\"></i>\n                            <i v-else=\"tag.type=='employee'\" class=\"fa fa-user\"></i>\n                            {{tag.label}}\n                        </el-tag>\n                    </span>\n                    <el-input v-show=\"tags.length!=0\"></el-input>\n                    <el-input v-show=\"tags.length==0\" placeholder=\"\u8BF7\u8F93\u5165\u5185\u5BB9\"></el-input>\n                </div>\n                <el-dialog :visible.sync=\"dialogVisible\" :width=\"300\" custom-class=\"componydialog\"\n                        :modal-append-to-body=\"false\" :close-on-click-modal=\"false\">\n                    <zsfund-origination-tree :prevnodes=\"prevNodes\" :options=\"option\" \n                        ref=\"orgTree\" :baseurl=\"baseUrl\" :dialog=\"dialogVisible\"\n                        v-on:getvalue=\"setValue\" v-on:cancelbutton=\"dialogVisible=false;\"\n                        v-on:confirmbutton=\"handleConfirm\"></zsfund-origination-tree>\n                </el-dialog>\n            </div>\n        </div>\n    ",
+    template: "\n        <div>\n            <div v-if=\"options.disabled\">\n                <el-input :disabled=\"true\" placeholder=\"\u8BF7\u8F93\u5165\u5185\u5BB9\"></el-input></div>\n            <div v-else>\n                <div class=\"select\" @click=\"dialogVisible = true\" style=\"position:relative;\">\n                    <span class=\"tags\" style=\"position:absolute;top: 20%;\">\n                        <el-tag v-for=\"tag in tags\" :key=\"tag\" size=\"small\" style=\"margin-left: 6px;\"\n                                closable @close=\"closeTag(tag)\" :disable-transitions=\"true\">\n                            <i v-if=\"tag.type=='department'\" class=\"fa fa-university\"></i>\n                            <i v-else-if=\"tag.type=='group'\" class=\"fa fa-users\"></i>\n                            <i v-else-if=\"tag.type=='manager'\" class=\"fa fa-user-secret\"></i>\n                            <i v-else=\"tag.type=='employee'\" class=\"fa fa-user\"></i>\n                            {{tag.label}}\n                        </el-tag>\n                    </span>\n                    <el-input v-show=\"tags.length!=0\"></el-input>\n                    <el-input v-show=\"tags.length==0\" placeholder=\"\u8BF7\u8F93\u5165\u5185\u5BB9\"></el-input>\n                </div>\n                <el-dialog :visible.sync=\"dialogVisible\" :width=\"300\" custom-class=\"componydialog\"\n                        :modal-append-to-body=\"false\" :close-on-click-modal=\"false\" append-to-body=\"true\">\n                    <zsfund-origination-tree :prevnodes=\"prevNodes\" :options=\"option\" \n                        ref=\"orgTree\" :baseurl=\"baseUrl\" :dialog=\"dialogVisible\"\n                        v-on:getvalue=\"setValue\" v-on:cancelbutton=\"dialogVisible=false;\"\n                        v-on:confirmbutton=\"handleConfirm\"></zsfund-origination-tree>\n                </el-dialog>\n            </div>\n        </div>\n    ",
     methods: {
         setValue: function (data) {
             this.selectData = data;
@@ -428,7 +431,12 @@ Vue.component("zsfund-origination-input-select", {
             //进而selectData带动data改变
             //三者使用同一块内存？
             //this.tags = this.selectData;//并不是呢
-            this.tags = $.extend(true, [], this.selectData).sort(function (a, b) { return b.data.unitType - a.data.unitType; });
+            if (this.options.multiple) {
+                this.tags = $.extend(true, [], this.selectData).sort(function (a, b) { return b.data.unitType - a.data.unitType; });
+            }
+            else {
+                this.tags = this.selectData === "" ? "" : $.extend(true, {}, this.selectData);
+            }
             if (this.prevNodes && this.prevNodes.length) {
                 if (!this.options.multiple && this.firstload) {
                     this.firstload = false;

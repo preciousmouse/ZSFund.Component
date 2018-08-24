@@ -8,6 +8,7 @@
     <link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" media="screen" href="css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" media="screen" href="css/metadatamanage.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="css/zsfund-component.css">
     <script src="js/libs/jquery-3.2.1.min.js"></script>
     <script src="js/libs/bootstrap.min.js"></script>
     <script src="js/libs/vue.min.js"></script>
@@ -15,17 +16,19 @@
     <!--useing Class-->
     <script src="js/components/Common.js"></script>
     <script src="js/components/metadatamanage.js"></script>
+    <script src="js/components/zsfund-component.js"></script>
 </head>
 <body>
     <div id="app">
         <el-container>
             <el-aside width="30%">
-                <el-container>
-                    <el-header height="auto">
+                <el-container direction="vertical">
+                    <el-header height="auto" v-if="isAdmin">
                         <el-button icon="el-icon-plus" size="mini" circle @click="handleTreeAdd"></el-button>
-                        <el-button icon="el-icon-delete" size="mini" circle @click="handleTreeDelete"></el-button>
                         <el-button icon="el-icon-edit" size="mini" circle @click="handleTreeEdit"></el-button>
-                        <el-button icon="el-icon-refresh" size="mini" circle @click="handleTreeReset"></el-button>
+                        <el-button icon="el-icon-delete" size="mini" circle @click="handleTreeDelete"></el-button>
+                        <el-button icon="el-icon-setting" size="mini" circle @click="handleTreePermission"></el-button>
+                        <!--<el-button icon="el-icon-refresh" size="mini" circle @click="handleTreeReset"></el-button>-->
                     </el-header>
                     <el-container>
                         <el-tree :props="props" :data="treeData" node-key="objectId"
@@ -57,17 +60,19 @@
                                         {{key}}: {{value}}
                                     </p>
                                 </template>
-                                <template v-else>{{scope.row.metaDetailValue}}</template>
+                                <template v-else>
+                                    {{scope.row.metaDetailValue}}
+                                </template>
                             </template>
                         </el-table-column>
                         <el-table-column prop="sort" label="Index" :resizable="false" header-align="center" align="center" width="60">
                         </el-table-column>
                         <el-table-column prop="description" label="Description" show-overflow-tooltip>
                         </el-table-column>
-                        <el-table-column prop="operation" label="" width="95">
+                        <el-table-column prop="operation" label="" :width="tableButtonWidth" class-name="table-buttons" align="center">
                             <template slot-scope="scope">
-                                <el-button icon="el-icon-edit" size="mini" circle @click="handleTableEdit(scope.$index, scope.row)" 
-                                           :disabled="!scope.row.editPermission"></el-button>
+                                <el-button icon="el-icon-edit" size="mini" circle @click="handleTableEdit(scope.$index, scope.row)"
+                                           v-if="scope.row.editPermission"></el-button>
                                 <el-popover placement="top" width="160" v-model="tableDeleteVisible[scope.$index]">
                                     <p>确定删除？</p>
                                     <div style="text-align: right; margin: 0">
@@ -75,7 +80,7 @@
                                         <el-button type="primary" size="mini" @click="handleTableDelete(scope.$index, scope.row);tableDeleteVisible.splice(scope.$index,1,false);">确定</el-button>
                                     </div>
                                     <el-button slot="reference" icon="el-icon-delete" type="danger" size="mini" circle @click="tableDeleteVisible.splice(scope.$index,1,true);"
-                                               :disabled="!scope.row.deletePermission"></el-button>
+                                               v-if="scope.row.deletePermission"></el-button>
                                 </el-popover>
                             </template>
                         </el-table-column>
@@ -176,7 +181,7 @@
                         <el-table-column prop="value" label="Value" header-align="center" align="center" width="160">
                             <div slot-scope="scope">
                                 <el-input v-if="metaTableData.keyValueMetadata[scope.$index].type==MetadataManage.MetadataProprertyTypeEnum.Number"
-                                                 v-model.number="metaTableData.keyValueMetadata[scope.$index].value" size="small"></el-input>
+                                          v-model.number="metaTableData.keyValueMetadata[scope.$index].value" size="small"></el-input>
                                 <el-date-picker v-else-if="metaTableData.keyValueMetadata[scope.$index].type==MetadataManage.MetadataProprertyTypeEnum.DateTime"
                                                 v-model="metaTableData.keyValueMetadata[scope.$index].value" type="date" placeholder="选择日期"
                                                 :picker-options="datePickerOptions" value-format="yyyy-MM-dd"></el-date-picker>
@@ -190,7 +195,7 @@
                         </el-table-column>
                     </el-table>
                     <!--Number-->
-                    <el-input v-else-if="tableForm.metaCategoryType==MetadataManage.MetadataProprertyTypeEnum.Number" v-model.number="tableForm.metaDetailValue" auto-complete="off"></el-input>
+                    <el-input v-else-if="tableForm.metaCategoryType==MetadataManage.MetadataProprertyTypeEnum.Number" v-model="tableForm.metaDetailValue" auto-complete="off"></el-input>
                     <!--String other unexcepted tpyes (default type)-->
                     <el-input v-else v-model="tableForm.metaDetailValue" auto-complete="off"></el-input>
                 </el-form-item>
@@ -204,6 +209,41 @@
             <div slot="footer" class="dialog-footer">
                 <el-button @click="tableDialogVisible = false">取 消</el-button>
                 <el-button type="primary" @click="validateForm('tableForm')">确 定</el-button>
+            </div>
+        </el-dialog>
+
+        <el-dialog :visible.sync="treePermissionDialogVisible" :close-on-click-modal="false" top="8vh" width="510px"
+                   custom-class="permissionDialog">
+            <div slot="title" class="el-dialog__title">
+                目录权限管理
+            </div>
+            <el-button class="permissionAdd" icon="el-icon-plus" size="mini" circle @click="handlePermissionAdd"></el-button>
+            <el-table :data="treePermission" class="permissionTable">
+                <el-table-column prop="memberId" label="用户" header-align="center">
+                    <zsfund-origination-input-select slot-scope="scope"
+                                                     :options="selectOption" v-model="scope.row.memberId">
+                    </zsfund-origination-input-select>
+                </el-table-column>
+                <el-table-column prop="permission" label="权限" header-align="center" align="center">
+                    <template slot-scope="scope">
+                        <el-checkbox-group v-model="scope.row.checkList" name="permissionCheck">
+                            <el-checkbox :label="MetadataManage.metadataPermissionEnum.Read">读取</el-checkbox>
+                            <el-checkbox :label="MetadataManage.metadataPermissionEnum.Add">添加</el-checkbox>
+                            <el-checkbox :label="MetadataManage.metadataPermissionEnum.Edit">编辑</el-checkbox>
+                            <el-checkbox :label="MetadataManage.metadataPermissionEnum.Delete">删除</el-checkbox>
+                        </el-checkbox-group>
+                    </template>
+                </el-table-column>
+                <el-table-column header-align="center" align="center" width="50">
+                    <template slot-scope="scope">
+                        <el-button icon="el-icon-delete" size="mini" circle
+                                   @click="handlePermissionDelete(scope.$index, scope.row)"></el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="treePermissionDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="handlePermissionConfirm">确 定</el-button>
             </div>
         </el-dialog>
     </div>
