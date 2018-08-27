@@ -33,7 +33,7 @@
     
 }*/
 
-.el-input {
+.select .el-input {
     /*解决Edge浏览器上 input上的tags被input框覆盖的问题*/
     position: static;
 } 

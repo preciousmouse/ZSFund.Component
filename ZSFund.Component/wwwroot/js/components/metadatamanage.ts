@@ -73,7 +73,7 @@ class MetadataManage {
                 treePermissionDialogVisible: false,
                 treePermission: [],
                 selectOption: {
-                    multiple: true,
+                    multiple: false,
                     chosenType: OrgBasePara.OrgSelectType.Employee
                 },
                 //search
@@ -141,6 +141,7 @@ class MetadataManage {
                     return ((<any>this).vm.$refs.asideTree.getNode(row.metaCategoryId).data
                         .metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities);
                 },
+
                 //tree      //this.$refs.asideTree
                 handleCurrentChange: (data, node)=> {
                     if (!node.isLeaf) {
@@ -191,6 +192,7 @@ class MetadataManage {
                 handleTreeReset: ()=> {
                     (<any>this).vm.$refs.asideTree.setCurrentKey(null);
                 },
+
                 //treeForm
                 handleTreeFormAdd: ()=> {
                     this.vm.$data.metaTreeData.push({
@@ -201,6 +203,7 @@ class MetadataManage {
                 handleTreeFormDelete: (index, row)=> {
                     this.vm.$data.metaTreeData.splice(index, 1);
                 },
+
                 //tree permission
                 handleTreePermission: () => {
                     var node = (<any>this).vm.$refs.asideTree.getCurrentNode();
@@ -233,11 +236,11 @@ class MetadataManage {
                             list.push(obj);
                         }
                     }
-                    this.vm.$data.treePermissionDialogVisible = false;
                     this.vm.$data.treePermission = list; 
-                    //post api
-                    console.log(this.vm.$data.treePermission);
+                    this.vm.$data.treePermissionDialogVisible = false;
+                    this.postPermission();
                 },
+
                 //table
                 handleSearch: ()=> {
                     if (this.vm.$data.searchInput == "") {
@@ -290,7 +293,9 @@ class MetadataManage {
                         this.vm.$data.tableDeleteVisible.splice(index, 1);
                     });
                 },
+
                 //tableForm
+
                 //form validate
                 validateForm: (formName)=> {
                     //var _this = this;
@@ -379,7 +384,13 @@ class MetadataManage {
     }
 
 //global
-    //在某个对象中，通过value得到key
+    /**
+     * 在某个对象中，通过value得到key
+     * 不存在value时返回undefined
+     * @param obj
+     * @param value
+     * @param compare = (a, b) => a === b
+     */
     private findkey(obj, value, compare = (a, b) => a === b) {
         //es6
         //return Object.keys(obj).find(val => compare(obj[val], value));
@@ -393,7 +404,11 @@ class MetadataManage {
         }
         return undefined;
     }
-    //得到被sub（subform）更新后的form
+    /**
+     * 得到被sub（subform）更新后的form
+     * @param sub
+     * @param form
+     */
     private getForm(sub, form) {
         form = $.extend(true, {}, form);//深拷贝
         for (var key in sub) {
@@ -401,7 +416,10 @@ class MetadataManage {
         }
         return form;
     }
-    //把数组数据中的name-value整合为key-value对象
+    /**
+     * 把数组数据中的name-value整合为key-value对象,返回序列化字符串
+     * @param data
+     */
     private getDetailJson(data) {
         var res = {};
         for (var i in data) {
@@ -409,7 +427,10 @@ class MetadataManage {
         }
         return JSON.stringify(res);
     }
-    //统计二进制有效位数
+    /**
+     * 统计二进制有效位数
+     * @param number
+     */
     private getBitCount(number) {
         var count = 0;
         while (number) {
@@ -418,7 +439,10 @@ class MetadataManage {
         }
         return count;
     }
-    //返回二进制位对应的数字数组
+    /**
+     * 返回二进制位对应的数字数组
+     * @param number
+     */
     private getBitArray(number) {
         var base = 1;
         var res = [];
@@ -431,13 +455,22 @@ class MetadataManage {
         }
         return res;
     }
+
 //message
-    private showMessage(option) {// { message:"", type:"success" }
+    /**
+     * 显示提示信息 -功能未完成
+     * @param option { message:"", type:"success" }
+     */
+    private showMessage(option) {
         (<any>this).vm.$message(option);
     }
+
 //tree
-    //目录节点为Enitity时调用
-    //得到enitity的各个属性名和类型
+    /**
+     * 目录节点为Enitity时调用
+     * 得到enitity的各个属性名和类型
+     * @param objectId
+     */
     private getType(objectId) {
         var node = (<any>this).vm.$refs.asideTree.getNode(objectId);
         var obj = {
@@ -454,12 +487,14 @@ class MetadataManage {
         }
         return obj;
     }
-    //通过api加载目录树内容
+    /**
+     * 通过api加载目录树内容
+     * 以及判断管理员身份
+     */
     private initTreeData() {
         var url = this.vm.$data.baseUrl + "/api/MetadataManage/Category", para = "";
         Common.InvokeWebApi(url, "GET", "error", "", true, (data) => {
             this.vm.$data.treeData = data;
-            //this.calcTypeMap(data);
             console.log(this.vm.$data.treeData);
         });
         url = this.vm.$data.baseUrl + "/api/MetadataManage/IsAdmin";
@@ -467,14 +502,20 @@ class MetadataManage {
             this.vm.$data.isAdmin = data;
         });
     }
-    //通过api进行目录树节点的添加/修改操作
+    /**
+     * 通过api进行目录树节点的添加/修改操作
+     */
     private postTreeEdit() {
         var url = this.vm.$data.baseUrl + "/api/MetadataManage/Category";
         Common.InvokeWebApi(url, "POST", "error", this.vm.$data.treeForm, true, (data) => {
             this.initTreeData();
         });
     }
-    //通过api进行目录树节点的删除操作
+    /**
+     * 通过api进行目录树节点的删除操作
+     * @param id
+     * @param callback =null
+     */
     private postTreeDelete(id, callback = null) {
         var url = this.vm.$data.baseUrl + "/api/MetadataManage/Category";
         Common.InvokeWebApi(url, "DELETE", "error", {
@@ -486,7 +527,11 @@ class MetadataManage {
             }
         });
     }
+
 //treeform
+    /**
+     * 处理目录树form内容,并调用api进行post请求
+     */
     private treeFormConfirm() {
         if (this.vm.$data.treeForm.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities) {
             var obj = {
@@ -511,7 +556,12 @@ class MetadataManage {
         this.vm.$data.treeDialogVisible = false;
         this.postTreeEdit();
     }
+
 //tree permission
+    /**
+     * 通过api加载目录树节点权限
+     * @param id =0
+     */
     private getPermission(id = 0) {
         if (id == undefined || id == 0) {
             this.vm.$data.treePermission = [];
@@ -525,11 +575,21 @@ class MetadataManage {
             this.vm.$data.treePermission = data;
         });
     }
-    private postPermission(permission) {
-
+    /**
+     * 通过api修改目录树节点权限情况
+     */
+    private postPermission() {
+        var url = this.vm.$data.baseUrl + "/api/MetadataManage/Permission";
+        Common.InvokeWebApi(url, "POST", "error", this.vm.$data.treePermission, true, (data) => {
+            console.log(this.vm.$data.treePermission);
+        });
     }
+
 //table
-    //通过带name-value值的obj对象，返回key-value数组
+    /**
+     * 通过带name-value值的obj对象，返回key-value数组
+     * @param obj tableData元素
+     */
     private getKeyValueData(obj) {
         var arr = this.getType(obj.metaCategoryId).keyValueMetadata;
         var value = JSON.parse(obj.metaDetailValue);
@@ -538,7 +598,11 @@ class MetadataManage {
         }
         return arr;
     }
-    //通过api加载元数据表格
+    /**
+     * 通过api加载元数据表格
+     * @param obj keyword或metaCategoryId 两者只有一者生效,keyword优先
+     * @param callback =null
+     */
     private setTableData(obj, callback = null) {
         var url = this.vm.$data.baseUrl + "/api/MetadataManage/Detail";
         var type = obj.keyWord == undefined;//false为搜索
@@ -593,7 +657,10 @@ class MetadataManage {
             }
         });
     }
-    //加载元数据内容
+    /**
+     * 加载指定目录的元数据内容
+     * @param id =0
+     */
     private initTableData(id = 0) {
         if (id == undefined || id == 0) {
             this.vm.$data.tableData = [];
@@ -603,14 +670,24 @@ class MetadataManage {
             metaCategoryId: id
         });
     }
-    //通过api进行元数据的添加/修改操作
-    private postTableEdit() {
+    /**
+     * 通过api进行元数据的添加/修改操作
+     * @param callback =null
+     */
+    private postTableEdit(callback=null) {
         var url = this.vm.$data.baseUrl + "/api/MetadataManage/Detail";
         Common.InvokeWebApi(url, "POST", "error", this.vm.$data.tableForm, true, (data) => {
             this.initTableData((<any>this).vm.$refs.asideTree.getCurrentNode().objectId);
+            if (callback) {
+                callback();
+            }
         })
     }
-    //通过api进行元数据的删除操作
+    /**
+     * 通过api进行元数据的删除操作
+     * @param id 
+     * @param callback =null
+     */
     private postTableDelete(id, callback = null) {
         //var url = this.baseUrl + "/api/MetadataManage/Detail";
         var url = this.vm.$data.baseUrl + "/api/MetadataManage/Detail?id=" + id;
@@ -621,7 +698,11 @@ class MetadataManage {
             }
         })
     }
-//tree tableform
+
+//tableform
+    /**
+     * 处理元数据form内容,并调用api进行post请求
+     */
     private tableFormConfirm() {
         if (this.vm.$data.tableForm.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities) {
             this.vm.$data.tableForm = this.getForm({
@@ -632,11 +713,22 @@ class MetadataManage {
         this.vm.$data.tableDialogVisible = false;
         this.postTableEdit();
     }
+
 //form validate
+    /**
+     * 重置清空form内容
+     * @param formName
+     */
     private resetForm(formName) {
         (<any>this).vm.$refs[formName].resetFields();
     }
-
+    /**
+     * 目录树dialog form中,值类型为Entities时，实体属性表格的check函数
+     * 传入rules对象即可
+     * @param rule
+     * @param value
+     * @param callback
+     */
     private treeEntityCheck = (rule, value, callback) => {
         if (this.vm.$data.treeForm.metaCategoryType != MetadataManage.MetadataProprertyTypeEnum.Entities) {
             callback();
@@ -652,6 +744,13 @@ class MetadataManage {
         }
         
     }
+    /**
+     * 元数据dialog form中,值类型为Entities时，实体属性表格的check函数
+     * 传入rules对象即可
+     * @param rule
+     * @param value
+     * @param callback
+     */
     private tableEntityCheck = (rule, value, callback) => {
         if (this.vm.$data.tableForm.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Number) {
             var number = this.vm.$data.tableForm.metaDetailValue;

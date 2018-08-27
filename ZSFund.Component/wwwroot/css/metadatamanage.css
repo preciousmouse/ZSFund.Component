@@ -53,6 +53,10 @@ p{
     line-height: 32px;
 }
 
+.el-dialog .el-form-item__label{
+    margin-bottom: 0;
+}
+
 .el-form-item {
     margin-bottom: 14px;
     max-width: 600px;
@@ -123,6 +127,10 @@ p{
     z-index: 99;
 }
 
+
+.el-checkbox-group[name=permissionCheck]{
+    margin-top: 5px;
+}
 .el-checkbox-group[name=permissionCheck] .el-checkbox {
     margin-left: 10px;
     margin-right: 10px;

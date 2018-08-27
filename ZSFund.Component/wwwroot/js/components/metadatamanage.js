@@ -3,6 +3,13 @@ var MetadataManage = /** @class */ (function () {
     function MetadataManage() {
         var _this = this;
         this.vm = null;
+        /**
+         * 目录树dialog form中,值类型为Entities时，实体属性表格的check函数
+         * 传入rules对象即可
+         * @param rule
+         * @param value
+         * @param callback
+         */
         this.treeEntityCheck = function (rule, value, callback) {
             if (_this.vm.$data.treeForm.metaCategoryType != MetadataManage.MetadataProprertyTypeEnum.Entities) {
                 callback();
@@ -18,6 +25,13 @@ var MetadataManage = /** @class */ (function () {
                 callback();
             }
         };
+        /**
+         * 元数据dialog form中,值类型为Entities时，实体属性表格的check函数
+         * 传入rules对象即可
+         * @param rule
+         * @param value
+         * @param callback
+         */
         this.tableEntityCheck = function (rule, value, callback) {
             if (_this.vm.$data.tableForm.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Number) {
                 var number = _this.vm.$data.tableForm.metaDetailValue;
@@ -96,7 +110,7 @@ var MetadataManage = /** @class */ (function () {
                 treePermissionDialogVisible: false,
                 treePermission: [],
                 selectOption: {
-                    multiple: true,
+                    multiple: false,
                     chosenType: OrgBasePara.OrgSelectType.Employee
                 },
                 //search
@@ -254,10 +268,9 @@ var MetadataManage = /** @class */ (function () {
                             list.push(obj);
                         }
                     }
-                    _this.vm.$data.treePermissionDialogVisible = false;
                     _this.vm.$data.treePermission = list;
-                    //post api
-                    console.log(_this.vm.$data.treePermission);
+                    _this.vm.$data.treePermissionDialogVisible = false;
+                    _this.postPermission();
                 },
                 //table
                 handleSearch: function () {
@@ -401,7 +414,13 @@ var MetadataManage = /** @class */ (function () {
         this.initTreeData();
     };
     //global
-    //在某个对象中，通过value得到key
+    /**
+     * 在某个对象中，通过value得到key
+     * 不存在value时返回undefined
+     * @param obj
+     * @param value
+     * @param compare = (a, b) => a === b
+     */
     MetadataManage.prototype.findkey = function (obj, value, compare) {
         //es6
         //return Object.keys(obj).find(val => compare(obj[val], value));
@@ -415,7 +434,11 @@ var MetadataManage = /** @class */ (function () {
         }
         return undefined;
     };
-    //得到被sub（subform）更新后的form
+    /**
+     * 得到被sub（subform）更新后的form
+     * @param sub
+     * @param form
+     */
     MetadataManage.prototype.getForm = function (sub, form) {
         form = $.extend(true, {}, form); //深拷贝
         for (var key in sub) {
@@ -423,7 +446,10 @@ var MetadataManage = /** @class */ (function () {
         }
         return form;
     };
-    //把数组数据中的name-value整合为key-value对象
+    /**
+     * 把数组数据中的name-value整合为key-value对象,返回序列化字符串
+     * @param data
+     */
     MetadataManage.prototype.getDetailJson = function (data) {
         var res = {};
         for (var i in data) {
@@ -431,7 +457,10 @@ var MetadataManage = /** @class */ (function () {
         }
         return JSON.stringify(res);
     };
-    //统计二进制有效位数
+    /**
+     * 统计二进制有效位数
+     * @param number
+     */
     MetadataManage.prototype.getBitCount = function (number) {
         var count = 0;
         while (number) {
@@ -440,7 +469,10 @@ var MetadataManage = /** @class */ (function () {
         }
         return count;
     };
-    //返回二进制位对应的数字数组
+    /**
+     * 返回二进制位对应的数字数组
+     * @param number
+     */
     MetadataManage.prototype.getBitArray = function (number) {
         var base = 1;
         var res = [];
@@ -454,12 +486,19 @@ var MetadataManage = /** @class */ (function () {
         return res;
     };
     //message
+    /**
+     * 显示提示信息 -功能未完成
+     * @param option { message:"", type:"success" }
+     */
     MetadataManage.prototype.showMessage = function (option) {
         this.vm.$message(option);
     };
     //tree
-    //目录节点为Enitity时调用
-    //得到enitity的各个属性名和类型
+    /**
+     * 目录节点为Enitity时调用
+     * 得到enitity的各个属性名和类型
+     * @param objectId
+     */
     MetadataManage.prototype.getType = function (objectId) {
         var node = this.vm.$refs.asideTree.getNode(objectId);
         var obj = {
@@ -476,13 +515,15 @@ var MetadataManage = /** @class */ (function () {
         }
         return obj;
     };
-    //通过api加载目录树内容
+    /**
+     * 通过api加载目录树内容
+     * 以及判断管理员身份
+     */
     MetadataManage.prototype.initTreeData = function () {
         var _this = this;
         var url = this.vm.$data.baseUrl + "/api/MetadataManage/Category", para = "";
         Common.InvokeWebApi(url, "GET", "error", "", true, function (data) {
             _this.vm.$data.treeData = data;
-            //this.calcTypeMap(data);
             console.log(_this.vm.$data.treeData);
         });
         url = this.vm.$data.baseUrl + "/api/MetadataManage/IsAdmin";
@@ -490,7 +531,9 @@ var MetadataManage = /** @class */ (function () {
             _this.vm.$data.isAdmin = data;
         });
     };
-    //通过api进行目录树节点的添加/修改操作
+    /**
+     * 通过api进行目录树节点的添加/修改操作
+     */
     MetadataManage.prototype.postTreeEdit = function () {
         var _this = this;
         var url = this.vm.$data.baseUrl + "/api/MetadataManage/Category";
@@ -498,7 +541,11 @@ var MetadataManage = /** @class */ (function () {
             _this.initTreeData();
         });
     };
-    //通过api进行目录树节点的删除操作
+    /**
+     * 通过api进行目录树节点的删除操作
+     * @param id
+     * @param callback =null
+     */
     MetadataManage.prototype.postTreeDelete = function (id, callback) {
         if (callback === void 0) { callback = null; }
         var url = this.vm.$data.baseUrl + "/api/MetadataManage/Category";
@@ -512,6 +559,9 @@ var MetadataManage = /** @class */ (function () {
         });
     };
     //treeform
+    /**
+     * 处理目录树form内容,并调用api进行post请求
+     */
     MetadataManage.prototype.treeFormConfirm = function () {
         if (this.vm.$data.treeForm.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities) {
             var obj = {
@@ -537,6 +587,10 @@ var MetadataManage = /** @class */ (function () {
         this.postTreeEdit();
     };
     //tree permission
+    /**
+     * 通过api加载目录树节点权限
+     * @param id =0
+     */
     MetadataManage.prototype.getPermission = function (id) {
         var _this = this;
         if (id === void 0) { id = 0; }
@@ -552,10 +606,21 @@ var MetadataManage = /** @class */ (function () {
             _this.vm.$data.treePermission = data;
         });
     };
-    MetadataManage.prototype.postPermission = function (permission) {
+    /**
+     * 通过api修改目录树节点权限情况
+     */
+    MetadataManage.prototype.postPermission = function () {
+        var _this = this;
+        var url = this.vm.$data.baseUrl + "/api/MetadataManage/Permission";
+        Common.InvokeWebApi(url, "POST", "error", this.vm.$data.treePermission, true, function (data) {
+            console.log(_this.vm.$data.treePermission);
+        });
     };
     //table
-    //通过带name-value值的obj对象，返回key-value数组
+    /**
+     * 通过带name-value值的obj对象，返回key-value数组
+     * @param obj tableData元素
+     */
     MetadataManage.prototype.getKeyValueData = function (obj) {
         var arr = this.getType(obj.metaCategoryId).keyValueMetadata;
         var value = JSON.parse(obj.metaDetailValue);
@@ -564,7 +629,11 @@ var MetadataManage = /** @class */ (function () {
         }
         return arr;
     };
-    //通过api加载元数据表格
+    /**
+     * 通过api加载元数据表格
+     * @param obj keyword或metaCategoryId 两者只有一者生效,keyword优先
+     * @param callback =null
+     */
     MetadataManage.prototype.setTableData = function (obj, callback) {
         var _this = this;
         if (callback === void 0) { callback = null; }
@@ -618,7 +687,10 @@ var MetadataManage = /** @class */ (function () {
             }
         });
     };
-    //加载元数据内容
+    /**
+     * 加载指定目录的元数据内容
+     * @param id =0
+     */
     MetadataManage.prototype.initTableData = function (id) {
         if (id === void 0) { id = 0; }
         if (id == undefined || id == 0) {
@@ -629,15 +701,26 @@ var MetadataManage = /** @class */ (function () {
             metaCategoryId: id
         });
     };
-    //通过api进行元数据的添加/修改操作
-    MetadataManage.prototype.postTableEdit = function () {
+    /**
+     * 通过api进行元数据的添加/修改操作
+     * @param callback =null
+     */
+    MetadataManage.prototype.postTableEdit = function (callback) {
         var _this = this;
+        if (callback === void 0) { callback = null; }
         var url = this.vm.$data.baseUrl + "/api/MetadataManage/Detail";
         Common.InvokeWebApi(url, "POST", "error", this.vm.$data.tableForm, true, function (data) {
             _this.initTableData(_this.vm.$refs.asideTree.getCurrentNode().objectId);
+            if (callback) {
+                callback();
+            }
         });
     };
-    //通过api进行元数据的删除操作
+    /**
+     * 通过api进行元数据的删除操作
+     * @param id
+     * @param callback =null
+     */
     MetadataManage.prototype.postTableDelete = function (id, callback) {
         if (callback === void 0) { callback = null; }
         //var url = this.baseUrl + "/api/MetadataManage/Detail";
@@ -649,7 +732,10 @@ var MetadataManage = /** @class */ (function () {
             }
         });
     };
-    //tree tableform
+    //tableform
+    /**
+     * 处理元数据form内容,并调用api进行post请求
+     */
     MetadataManage.prototype.tableFormConfirm = function () {
         if (this.vm.$data.tableForm.metaCategoryType == MetadataManage.MetadataProprertyTypeEnum.Entities) {
             this.vm.$data.tableForm = this.getForm({
@@ -661,6 +747,10 @@ var MetadataManage = /** @class */ (function () {
         this.postTableEdit();
     };
     //form validate
+    /**
+     * 重置清空form内容
+     * @param formName
+     */
     MetadataManage.prototype.resetForm = function (formName) {
         this.vm.$refs[formName].resetFields();
     };

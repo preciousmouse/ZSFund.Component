@@ -145,7 +145,7 @@ requset
 			无法通过外部css控制
 			通过:width动态控制
 
-	8、	目录上方添加setting按钮					--solve--remainApi
+	8、	目录上方添加setting按钮					--solve--remainEditApi
 		用于设置固定节点的用户权限
 			用户     	权限
 			用户空间		权限多选框

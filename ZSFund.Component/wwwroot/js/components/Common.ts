@@ -144,7 +144,7 @@ class Common {
             type: method,
             async: async,
             cache: false,
-            contentType: method == "POST" ? "application/json" : undefined,
+            contentType: method == "POST" ? "application/json" : method == "DELETE" ? "application/x-www-form-urlencoded" : undefined,
             data: method == "POST" ? JSON.stringify(data) : data,
             //contentType: method == "DELETE" ? "application/x-www-form-urlencoded" : undefined,
             //data: data,

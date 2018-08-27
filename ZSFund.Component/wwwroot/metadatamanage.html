@@ -212,7 +212,7 @@
             </div>
         </el-dialog>
 
-        <el-dialog :visible.sync="treePermissionDialogVisible" :close-on-click-modal="false" top="8vh" width="510px"
+        <el-dialog :visible.sync="treePermissionDialogVisible" :close-on-click-modal="false" top="8vh" width="610px"
                    custom-class="permissionDialog">
             <div slot="title" class="el-dialog__title">
                 目录权限管理
@@ -224,7 +224,7 @@
                                                      :options="selectOption" v-model="scope.row.memberId">
                     </zsfund-origination-input-select>
                 </el-table-column>
-                <el-table-column prop="permission" label="权限" header-align="center" align="center">
+                <el-table-column prop="permission" label="权限" header-align="center" align="center"width="310">
                     <template slot-scope="scope">
                         <el-checkbox-group v-model="scope.row.checkList" name="permissionCheck">
                             <el-checkbox :label="MetadataManage.metadataPermissionEnum.Read">读取</el-checkbox>
