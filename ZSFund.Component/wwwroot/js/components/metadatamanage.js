@@ -110,7 +110,7 @@ var MetadataManage = /** @class */ (function () {
                 treePermissionDialogVisible: false,
                 treePermission: [],
                 selectOption: {
-                    multiple: false,
+                    multiple: true,
                     chosenType: OrgBasePara.OrgSelectType.Employee
                 },
                 //search
@@ -179,9 +179,9 @@ var MetadataManage = /** @class */ (function () {
                 },
                 //tree      //this.$refs.asideTree
                 handleCurrentChange: function (data, node) {
-                    if (!node.isLeaf) {
-                        return;
-                    }
+                    //if (!node.isLeaf) {
+                    //    return;
+                    //}
                     _this.initTableData(data.objectId);
                 },
                 handleTreeAdd: function () {
@@ -271,6 +271,12 @@ var MetadataManage = /** @class */ (function () {
                     _this.vm.$data.treePermission = list;
                     _this.vm.$data.treePermissionDialogVisible = false;
                     _this.postPermission();
+                },
+                handleOrgSelectChange: function (index, str) {
+                    var str = _this.vm.$data.treePermission[index].memberId;
+                    if (str.indexOf(";") != -1) {
+                        _this.vm.$data.treePermission[index].memberId = str.split(';')[1];
+                    }
                 },
                 //table
                 handleSearch: function () {
@@ -485,6 +491,16 @@ var MetadataManage = /** @class */ (function () {
         }
         return res;
     };
+    /**
+     * 返回较大值
+     * @param a
+     * @param b
+     * @param compare 比较规则,默认>运算符比较
+     */
+    MetadataManage.prototype.max = function (a, b, compare) {
+        if (compare === void 0) { compare = function (a, b) { return a > b ? a : b; }; }
+        return compare(a, b);
+    };
     //message
     /**
      * 显示提示信息 -功能未完成
@@ -637,15 +653,14 @@ var MetadataManage = /** @class */ (function () {
     MetadataManage.prototype.setTableData = function (obj, callback) {
         var _this = this;
         if (callback === void 0) { callback = null; }
-        var url = this.vm.$data.baseUrl + "/api/MetadataManage/Detail";
+        var url = Common.GetUrl(this.vm.$data.baseUrl + "/api/MetadataManage/Detail", obj);
         var type = obj.keyWord == undefined; //false为搜索
-        Common.InvokeWebApi(url, "GET", "error", obj, true, function (data) {
+        Common.InvokeWebApi(url, "GET", "error", null, true, function (data) {
             //console.log(data, this, type);
             //根据权限进行元数据筛选 默认&List存在
             _this.vm.$data.tableData = []; //data;
             if (data != undefined && data) {
-                //记录每列最多有多少按钮
-                var buttonCount = 0;
+                var buttonFlag = 0;
                 for (var i in data) {
                     var permission = _this.vm.$refs.asideTree.getNode(data[i].metaCategoryId).data.permission;
                     //test
@@ -654,6 +669,8 @@ var MetadataManage = /** @class */ (function () {
                         //| MetadataManage.metadataPermissionEnum.Add
                         | Math.floor(Math.random() * 2) * MetadataManage.metadataPermissionEnum.Edit
                         | Math.floor(Math.random() * 2) * MetadataManage.metadataPermissionEnum.Delete);
+                    //记录每列最多有多少按钮
+                    var buttonCount = 0;
                     //元数据可读性（是否显示）
                     if (permission & MetadataManage.metadataPermissionEnum.Read) {
                         data[i].editPermission = permission & MetadataManage.metadataPermissionEnum.Edit ? true : false;
@@ -666,9 +683,11 @@ var MetadataManage = /** @class */ (function () {
                             buttonCount |= 2;
                         }
                     }
+                    buttonFlag = _this.max(buttonFlag, _this.getBitCount(buttonCount));
                 }
                 //根据按钮数调整列宽度
-                _this.vm.$data.tableButtonWidth = 20 + _this.getBitCount(buttonCount) * 38;
+                _this.vm.$data.tableButtonWidth = 20 + buttonFlag * 38;
+                console.log(buttonFlag);
             }
             //添加按钮可用性
             _this.vm.$data.tableAddPermission = type && ((_this.vm.$refs.asideTree.getCurrentNode().permission & MetadataManage.metadataPermissionEnum.Add) != 0);

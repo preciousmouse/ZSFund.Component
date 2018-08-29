@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>LogViewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="stylesheet" type="text/css" href="css/elementui-2.4.6.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="css/LogViewer.css">
+    <!--<link rel="stylesheet" type="text/css" media="screen" href="css/zsfund-component.css">-->
+    <script src="js/libs/jquery-3.2.1.min.js"></script>
+    <script src="js/libs/bootstrap.min.js"></script>
+    <script src="js/libs/vue.min.js"></script>
+    <script src="js/libs/elementui-2.4.6.js"></script>
+    <!--useing Class-->
+    <script src="js/components/Common.js"></script>
+    <script src="js/components/LogViewer.js"></script>
+    <!--<script src="js/components/zsfund-component.js"></script>-->
+</head>
+<body>
+    <div id="app" class="logViewer">
+        <el-header height="auto">
+            <el-form :inline="true" :model="logForm">
+                <el-form-item label="时间">
+                    <el-date-picker class="date-range" v-model="logForm.dateRange" type="daterange" value-format="yyyy/MM/dd" placeholder="选择日期"
+                                    unlink-panels range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"
+                                    size="mini"></el-date-picker>
+                </el-form-item>
+                <el-form-item label="来源">
+                    <el-select class="source" v-model="logForm.source" size="mini" clearable placeholder="请选择">
+                        <el-option v-for="item in sourceOptions" :key="item" :value="item"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="类型">
+                    <el-select class="type" v-model="logForm.type" size="mini" clearable placeholder="请选择">
+                        <el-option v-for="item in typeOptions" :key="item" :value="item"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="类型2">
+                    <el-select class="type2" v-model="logForm.type2" size="mini" clearable placeholder="请选择">
+                        <el-option v-for="item in type2Options" :key="item" :value="item"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="级别">
+                    <el-select class="level" v-model="logForm.level" size="mini" clearable placeholder="请选择">
+                        <el-option v-for="(value,key) in levelOptions" :key="key"
+                                   :label="value" :value="key"></el-option>
+                    </el-select>
+                </el-form-item>
+                <!--<br>-->
+                <el-form-item label="标题">
+                    <el-input class="title" placeholder="请输入内容" v-model="logForm.title" clearable size="mini"></el-input>
+                </el-form-item>
+                <el-form-item label="登录名">
+                    <el-input class="loginName" placeholder="请输入内容" v-model="logForm.loginName" clearable size="mini"></el-input>
+                </el-form-item>
+                <el-form-item label="优先级">
+                    <el-input class="priority" placeholder="-1" v-model="logForm.priority" clearable size="mini"></el-input>
+                </el-form-item>
+                <el-button type="primary" icon="el-icon-search" circle size="medium"
+                           @click="handleFilter"></el-button>
+            </el-form>
+        </el-header>
+        <el-container>
+            <el-header height="auto">
+                <el-pagination :current-page.sync="currentPage" :page-sizes="pageSizes" :page-size.sync="pageSize" :total="totalSize"
+                               @size-change="handleSizeChange" @current-change="handlePageChange" layout="sizes, prev, pager, next, total, jumper">
+                </el-pagination>
+            </el-header>
+            <el-main>
+                <el-table :data="logTable" class="logTable" border>
+                    <el-table-column label="级别" width="60px" align="center">
+                        <template slot-scope="scope">
+                            {{levelOptions[scope.row.logLevel]}}
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="logDate" label="时间" width="190px" align="center"></el-table-column>
+                    <el-table-column prop="appSource" label="来源" width="130px" align="center"></el-table-column>
+                    <el-table-column prop="logTitle" label="标题" header-align="center" show-overflow-tooltip></el-table-column>
+                    <el-table-column prop="logMessage" label="详细信息" min-width="200px" header-align="center" show-overflow-tooltip></el-table-column>
+                    <el-table-column prop="logType" label="类型" width="155px" align="center"></el-table-column>
+                    <el-table-column prop="logType2" label="类型2" width="155px" align="center"></el-table-column>
+                    <el-table-column prop="priority" label="优先级" width="70px" align="center"></el-table-column>
+                    <el-table-column prop="loginName" label="登录名" align="center" show-overflow-tooltip></el-table-column>
+                </el-table>
+            </el-main>
+            <el-footer height="auto">
+                <el-pagination :current-page.sync="currentPage" :page-sizes="pageSizes" :page-size.sync="pageSize" :total="totalSize"
+                               @size-change="handleSizeChange" @current-change="handlePageChange" layout=" prev, pager, next, total, jumper">
+                </el-pagination>
+            </el-footer>
+        </el-container>
+    </div>
+</body>
+</html>
+<script>
+    $(document).ready(function () {
+        var logViewer = new LogViewer();
+        logViewer.Init();
+    })
+</script>

@@ -14,10 +14,27 @@ p{
     min-height: 100vh;
 }
 
-.content .el-header {
-    text-align: right;
-    padding: 20px 10px 0;
+.el-container.content .el-table {
+    margin: 8px 5px 10px 10px;
 }
+    .el-container.content .el-table td, .el-container.content .el-table th{
+        padding: 3px 0;
+        height: 36px;
+    }
+.el-container.content .table-buttons i{
+    font-size: 13px;
+}
+
+.el-container.content .el-header {
+    text-align: right;
+    padding: 5px 10px 0;
+}
+    .el-container.content .el-header .el-input {
+         width: auto !important; 
+    }
+    .el-container.content .el-header .el-button:first-of-type {
+        margin-left: 5px;
+    }
 
 .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
     background-color: #f0f7ff;
@@ -25,12 +42,13 @@ p{
 
 .el-aside {
     background-color: rgb(238, 241, 246);
-    min-width: 218px;
-    max-width: 350px;
+    min-width: 190px;
+    max-width: 250px;
 }
 
     .el-aside .el-header {
         /*background-color: #fff;*/
+        padding: 2px 0;
         text-align: center;
     }
 
@@ -39,10 +57,6 @@ p{
         padding: 10px;
         margin: 2px;
     }
-
-.el-input {
-    width: auto !important;
-}
 
 .el-dialog:not(.permissionDialog) .el-input input {
     height: 32px;

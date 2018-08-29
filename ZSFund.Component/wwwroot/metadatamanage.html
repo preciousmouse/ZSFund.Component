@@ -21,7 +21,7 @@
 <body>
     <div id="app">
         <el-container>
-            <el-aside width="30%">
+            <el-aside width="210px">
                 <el-container direction="vertical">
                     <el-header height="auto" v-if="isAdmin">
                         <el-button icon="el-icon-plus" size="mini" circle @click="handleTreeAdd"></el-button>
@@ -46,8 +46,8 @@
             <el-container class="content">
                 <el-header height="auto">
                     <el-input v-model="searchInput" placeholder="请输入内容"></el-input>
-                    <el-button icon="el-icon-search" circle @click="handleSearch"></el-button>
-                    <el-button icon="el-icon-plus" circle @click="handleTableAdd" :disabled="!tableAddPermission"></el-button>
+                    <el-button icon="el-icon-search" size="medium" circle @click="handleSearch"></el-button>
+                    <el-button icon="el-icon-plus" size="medium" circle @click="handleTableAdd" :disabled="!tableAddPermission"></el-button>
                 </el-header>
                 <el-container>
                     <el-table :data="tableData" border>
@@ -56,9 +56,9 @@
                         <el-table-column prop="metaDetailValue" label="Value">
                             <template slot-scope="scope">
                                 <template v-if="showEntity(scope.row)">
-                                    <p v-for="(value,key) in JSON.parse(scope.row.metaDetailValue)">
+                                    <div v-for="(value,key) in JSON.parse(scope.row.metaDetailValue)">
                                         {{key}}: {{value}}
-                                    </p>
+                                    </div>
                                 </template>
                                 <template v-else>
                                     {{scope.row.metaDetailValue}}
@@ -218,13 +218,15 @@
                 目录权限管理
             </div>
             <el-button class="permissionAdd" icon="el-icon-plus" size="mini" circle @click="handlePermissionAdd"></el-button>
+
+            <el-button @click="treePermission[0].memberId=''">emm</el-button>
             <el-table :data="treePermission" class="permissionTable">
                 <el-table-column prop="memberId" label="用户" header-align="center">
-                    <zsfund-origination-input-select slot-scope="scope"
-                                                     :options="selectOption" v-model="scope.row.memberId">
+                    <zsfund-origination-input-select slot-scope="scope" :options="selectOption"
+                                                     v-model="scope.row.memberId" @change="handleOrgSelectChange(scope.$index)">
                     </zsfund-origination-input-select>
                 </el-table-column>
-                <el-table-column prop="permission" label="权限" header-align="center" align="center"width="310">
+                <el-table-column prop="permission" label="权限" header-align="center" align="center" width="310">
                     <template slot-scope="scope">
                         <el-checkbox-group v-model="scope.row.checkList" name="permissionCheck">
                             <el-checkbox :label="MetadataManage.metadataPermissionEnum.Read">读取</el-checkbox>

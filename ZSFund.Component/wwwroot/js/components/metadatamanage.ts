@@ -73,7 +73,7 @@ class MetadataManage {
                 treePermissionDialogVisible: false,
                 treePermission: [],
                 selectOption: {
-                    multiple: false,
+                    multiple: true,
                     chosenType: OrgBasePara.OrgSelectType.Employee
                 },
                 //search
@@ -144,9 +144,9 @@ class MetadataManage {
 
                 //tree      //this.$refs.asideTree
                 handleCurrentChange: (data, node)=> {
-                    if (!node.isLeaf) {
-                        return;
-                    }
+                    //if (!node.isLeaf) {
+                    //    return;
+                    //}
                     this.initTableData(data.objectId);
                 },
                 handleTreeAdd: () => {
@@ -240,7 +240,12 @@ class MetadataManage {
                     this.vm.$data.treePermissionDialogVisible = false;
                     this.postPermission();
                 },
-
+                handleOrgSelectChange: (index,str) => {
+                    var str = this.vm.$data.treePermission[index].memberId;
+                    if (str.indexOf(";") != -1) {
+                        this.vm.$data.treePermission[index].memberId = str.split(';')[1];
+                    }
+                },
                 //table
                 handleSearch: ()=> {
                     if (this.vm.$data.searchInput == "") {
@@ -455,6 +460,15 @@ class MetadataManage {
         }
         return res;
     }
+    /**
+     * 返回较大值
+     * @param a
+     * @param b
+     * @param compare 比较规则,默认>运算符比较
+     */
+    private max(a, b,compare= (a,b)=> a>b?a:b ) {
+        return compare(a, b);
+    }
 
 //message
     /**
@@ -604,15 +618,14 @@ class MetadataManage {
      * @param callback =null
      */
     private setTableData(obj, callback = null) {
-        var url = this.vm.$data.baseUrl + "/api/MetadataManage/Detail";
+        var url = Common.GetUrl(this.vm.$data.baseUrl + "/api/MetadataManage/Detail",obj);
         var type = obj.keyWord == undefined;//false为搜索
-        Common.InvokeWebApi(url, "GET", "error", obj, true, (data) => {
+        Common.InvokeWebApi(url, "GET", "error", null, true, (data) => {
             //console.log(data, this, type);
             //根据权限进行元数据筛选 默认&List存在
             this.vm.$data.tableData = [];//data;
             if (data != undefined && data) {
-                //记录每列最多有多少按钮
-                var buttonCount = 0b0;
+                var buttonFlag = 0;
                 for (var i in data) {
                     var permission = (<any>this).vm.$refs.asideTree.getNode(data[i].metaCategoryId).data.permission;
                         //test
@@ -623,6 +636,8 @@ class MetadataManage {
                             | Math.floor(Math.random() * 2) * MetadataManage.metadataPermissionEnum.Edit
                             | Math.floor(Math.random() * 2) * MetadataManage.metadataPermissionEnum.Delete
                     );
+                    //记录每列最多有多少按钮
+                    var buttonCount = 0b0;
                     //元数据可读性（是否显示）
                     if (permission & MetadataManage.metadataPermissionEnum.Read) {
                         data[i].editPermission = permission & MetadataManage.metadataPermissionEnum.Edit ? true : false;
@@ -635,9 +650,11 @@ class MetadataManage {
                             buttonCount |= 0b10;
                         }
                     }
+                    buttonFlag = this.max(buttonFlag, this.getBitCount(buttonCount));
                 }
                 //根据按钮数调整列宽度
-                this.vm.$data.tableButtonWidth = 20 + this.getBitCount(buttonCount) * 38;
+                this.vm.$data.tableButtonWidth = 20 + buttonFlag * 38;
+                console.log(buttonFlag);
             }
             //添加按钮可用性
             this.vm.$data.tableAddPermission = type && (

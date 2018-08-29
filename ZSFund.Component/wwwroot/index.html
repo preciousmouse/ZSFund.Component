@@ -33,7 +33,7 @@
         el: '#components-demo',
         data: {
             str: "C29973E1-4F1B-4CE4-A413-4FF76A3DC32F;59ABCA57-A31C-4CBD-BB2E-EFCC1F935B45",
-            str2: "36407FD0-3E4B-4E03-9819-0ED61DFB45D6",
+            str2: "",
             //str: "",
             //加载组件前str希望是一个字符串，表示一串id列表，以分号;分割
             //返回的结果值也由str接收，格式与上述相同
@@ -45,7 +45,7 @@
             OrgOptions: {//zsfund-origination-input-select配置参数，说明如下：
                 collapseTags: false,//[option,默认为false]element-ui el-select组件自带的属性,选中多组数据时，若该值为true，则只会显示第一条tag，多余的以“+1”形式表示
                 disabled: false,//[option,默认为false],用于控制zsfund-origination-input-select组件是否可用
-                multiple: true,//[option,默认为true]用于控制zsfund-origination-input-select组件是否可多选
+                multiple: false,//[option,默认为true]用于控制zsfund-origination-input-select组件是否可多选
                 //type: 0,// [option,默认为0,其他参数为1（表示个人）8（表示部门）0（表示所有）]type=1：目录树中除了第一级节点之外，只显示员工节点,tpye=8：目录树中除了第一级节点之外，只显示部门节点,type=0：目录树节点全部显示
                 displayType: OrgBasePara.OrgSelectType.Employee | OrgBasePara.OrgSelectType.Department,
                                 //[option,默认为OrgBasePara.OrgSelectType.All,支持多个参数的位或运算结果,例如9(表示个人+部门)]
@@ -71,6 +71,13 @@
             showNodes: function () {
                 console.log(this.str);
                 this.str = "843a0e84-4c91-429c-96d3-d74f8269ca4c;C29973E1-4F1B-4CE4-A413-4FF76A3DC32F";
+                this.OrgOptions = {
+                    collapseTags: true,
+                    disabled: false,
+                    multiple: true,
+                    displayType: OrgBasePara.OrgSelectType.Employee | OrgBasePara.OrgSelectType.Department,
+                    chosenType: OrgBasePara.OrgSelectType.Employee | OrgBasePara.OrgSelectType.Department,
+                }
             }
         }
     });

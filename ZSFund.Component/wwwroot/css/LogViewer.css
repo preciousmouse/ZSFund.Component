@@ -1,0 +1,50 @@
+﻿
+.el-select{
+    vertical-align: top;
+}
+
+.logViewer>.el-header {
+    padding-top: 10px;
+    display: flex;
+}
+.logViewer > .el-container .el-header, .logViewer > .el-container .el-footer {
+    display: flex;
+}
+
+.logViewer .el-form-item {
+    margin-bottom: 0;
+}
+    .logViewer .el-form-item label{
+        padding-right: 8px;
+    }
+
+.logViewer .el-pagination{
+    margin: 0 auto;
+}
+
+.el-date-editor--daterange.date-range {
+    width: 210px;
+}
+    .el-date-editor--daterange.date-range .el-range-separator {
+        /*z-index: 3;*/
+        width: 10%;
+    }
+
+.el-select.source, .el-select.type, .el-select.type2{
+    width: 120px;
+}
+.el-select.level {
+    width: 90px;
+}
+
+.el-input.title, .el-input.loginName {
+    width: 130px;
+}
+.el-input.priority{
+    width: 90px;
+}
+
+.el-table.logTable td, .el-table.logTable th {
+    padding: 3px 0;
+    height: 30px;
+}

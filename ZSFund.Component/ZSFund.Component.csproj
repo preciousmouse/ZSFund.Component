@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Content Remove="wwwroot\js\components\Common.ts" />
+    <Content Remove="wwwroot\js\components\LogViewer.ts" />
     <Content Remove="wwwroot\js\components\metadatamanage.ts" />
     <Content Remove="wwwroot\js\components\zsfund-componet.ts" />
   </ItemGroup>
@@ -28,6 +29,7 @@
 
   <ItemGroup>
     <TypeScriptCompile Include="wwwroot\js\components\Common.ts" />
+    <TypeScriptCompile Include="wwwroot\js\components\LogViewer.ts" />
     <TypeScriptCompile Include="wwwroot\js\components\metadatamanage.ts" />
   </ItemGroup>
 

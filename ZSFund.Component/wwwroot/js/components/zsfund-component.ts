@@ -69,14 +69,14 @@ class AjaxHelper {
 class OrgBasePara {
     static OrgSelectType: any;
     constructor() {
-        enum OrgUnitType {
-            User = 1,
-            //Group = 2,
-            //Post = 4,
-            Department = 8,
-            //Company = 16,
-            All = 255
-        }
+        //enum OrgUnitType {
+        //    User = 1,
+        //    Group = 2,
+        //    Post = 4,
+        //    Department = 8,
+        //    Company = 16,
+        //    All = 255
+        //}
         enum OrgSelectType {
             Employee = 1,
             Department = 8,
@@ -107,30 +107,9 @@ class OrgBasePara {
     }
 }
 
-class Metadata {
-    static MetadataProprertyTypeEnum: any;
-    constructor() {
-        enum MetadataProprertyTypeEnum {
-            String = 0,
-            Number = 1,
-            DateTime = 2,
-            Boolean = 3,
-            Entities = 4
-        }
-        Metadata.MetadataProprertyTypeEnum = MetadataProprertyTypeEnum;
-    }
-    //public static MetadataProprertyTypeEnum = {
-    //    String: 0,
-    //    Number: 1,
-    //    DateTime: 2,
-    //    Boolean: 3,
-    //    Entities: 4,
-    //}
-}
 
 var ajaxHelper = new AjaxHelper();
 var orgBasePara = new OrgBasePara();
-var metadata = new Metadata();
 Vue.component('zsfund-stock-select', {
     data: () => {
         return {
@@ -216,6 +195,26 @@ Vue.component('zsfund-origination-tree', {
         </div>
     `,
     methods: {
+        /**
+         * 自定义findIndex函数
+         * @param array
+         * @param callback
+         */
+        findIndex(array, callback) {
+            if (!Array.isArray(array)) {
+                return -2;
+            }
+            for (var i in array) {
+                if (callback(array[i])) {
+                    return i;
+                }
+            }
+            return -1;
+        },
+        /**
+         * select框change事件
+         * @param data
+         */
         selectChosen(data) {
             var dataid = [];
             for (var i in data) {
@@ -236,9 +235,18 @@ Vue.component('zsfund-origination-tree', {
                 console.log("assert");
             }
         },
+        /**
+         * select框关闭标签
+         * @param data
+         */
         removeTag(data) {
             this.$refs.tree.setChecked(data.id,false);
         },
+        /**
+         * tree组件check-change回调
+         * @param data
+         * @param check
+         */
         checkChange(data, check) {
             var node = this.$refs.tree.getNode(data);
             if (this.options.multiple) {
@@ -278,6 +286,11 @@ Vue.component('zsfund-origination-tree', {
                 }
             }
         },
+        /**
+         * tree组件动态加载节点的回调
+         * @param node
+         * @param resolve
+         */
         onload(node, resolve) {
             //if (node.level > 1) {
             //    return resolve([]);
@@ -314,17 +327,12 @@ Vue.component('zsfund-origination-tree', {
                 }
             })
         },
-        findIndex(array, callback) {
-            if (!Array.isArray(array)) {
-                return -2;
-            }
-            for (var i in array) {
-                if (callback(array[i])) {
-                    return i;
-                }
-            }
-            return -1;
-        },
+        /**
+         * tree组件节点点击回调
+         * @param node
+         * @param data
+         * @param f
+         */
         onclick(node, data, f) {
             if (node.disabled || !node.leaf) {
             //if (data.isLeaf == false) { // data.isLeaf根据树节点的resolve进行自动更新
@@ -333,6 +341,10 @@ Vue.component('zsfund-origination-tree', {
             }
             this.$refs.tree.setChecked(node.id, !data.checked);
         },
+        /**
+         * 更新search内容,tree上选择的节点可以在search-bar上加载
+         * @param data
+         */
         appendToOptions(data) {
             this.search = [];
             for (let i in data) {
@@ -342,6 +354,10 @@ Vue.component('zsfund-origination-tree', {
                 //}
             }
         },
+        /**
+         * search方法
+         * @param query
+         */
         getSearchResult(query) {
             if (query === '') {
                 return;
@@ -354,6 +370,9 @@ Vue.component('zsfund-origination-tree', {
                 this.loading = false;
             })
         },
+        /**
+         * 节点初始化/更新
+         */
         loadLastNodes() {
             if (!(this.prevnodes&&this.prevnodes.length)) {
                 return;
@@ -437,199 +456,232 @@ Vue.component('zsfund-origination-tree', {
     }
 });
 
-Vue.component("zsfund-origination-input-select", {
-    data: () => {
-        return {
-            dialogVisible: false,
-            tags: [],
-            selectData: [],
-            prevNodes: null,
-            firstload: true,
-            baseUrl: "",
-            option: {
-                collapseTags: false,
-                multiple: false,
-                //type: 0,
-                //并没有用到的width和height
-                width: "",
-                height: "",
-
-                //loadUrl: "/api/Org/Children"  //type test url
-            },
-        }
-    },
-    props: ['options', 'value','baseurl'],
-    template: `
-        <div>
-            <div v-if="options.disabled">
-                <el-input :disabled="true" placeholder="请输入内容"></el-input></div>
-            <div v-else>
-                <div class="select" @click="dialogVisible = true" style="position:relative;">
-                    <span class="tags" style="position:absolute;top: 20%;">
-                        <el-tag v-for="tag in tags" :key="tag" size="small" style="margin-left: 6px;"
-                                closable @close="closeTag(tag)" :disable-transitions="true">
-                            <i v-if="tag.type=='department'" class="fa fa-university"></i>
-                            <i v-else-if="tag.type=='group'" class="fa fa-users"></i>
-                            <i v-else-if="tag.type=='manager'" class="fa fa-user-secret"></i>
-                            <i v-else="tag.type=='employee'" class="fa fa-user"></i>
-                            {{tag.label}}
-                        </el-tag>
-                    </span>
-                    <el-input v-show="tags.length!=0"></el-input>
-                    <el-input v-show="tags.length==0" placeholder="请输入内容"></el-input>
-                </div>
-                <el-dialog :visible.sync="dialogVisible" :width="300" custom-class="componydialog"
-                        :modal-append-to-body="false" :close-on-click-modal="false" append-to-body="true">
-                    <zsfund-origination-tree :prevnodes="prevNodes" :options="option" 
-                        ref="orgTree" :baseurl="baseUrl" :dialog="dialogVisible"
-                        v-on:getvalue="setValue" v-on:cancelbutton="dialogVisible=false;"
-                        v-on:confirmbutton="handleConfirm"></zsfund-origination-tree>
-                </el-dialog>
-            </div>
-        </div>
-    `,
-    methods: {
-        setValue(data) {
-            this.selectData = data;
-            if (!this.options.multiple) {
-                this.handleConfirm();
+class OrgSelect {
+    public vm = {
+        data: () => {
+            return {
+                dialogVisible: false,
+                tags: [],
+                selectData: [],
+                prevNodes: null,
+                firstload: true,
+                //baseUrl: "",
+                //option: {
+                //    collapseTags: false,
+                //    multiple: false,
+                //    //loadUrl: "/api/Org/Children"  //type test url
+                //},
             }
         },
-        handleConfirm() {
-            //浅拷贝，tags改变会带动selectdata改变
-            //进而selectData带动data改变
-            //三者使用同一块内存？
-            //this.tags = this.selectData;//并不是呢
+        props: ['options', 'value', 'baseurl'],
+        template: `
+            <div>
+                <div v-if="options.disabled">
+                    <el-input :disabled="true" placeholder="请输入内容"></el-input></div>
+                <div v-else>
+                    <div class="select" @click="dialogVisible = true" style="position:relative;">
+                        <span class="tags" style="position:absolute;top: 20%;">
+                            <el-tag v-for="tag in tags" :key="tag" size="small" style="margin-left: 6px;"
+                                    closable @close="closeTag(tag)" :disable-transitions="true">
+                                <i v-if="tag.type=='department'" class="fa fa-university"></i>
+                                <i v-else-if="tag.type=='group'" class="fa fa-users"></i>
+                                <i v-else-if="tag.type=='manager'" class="fa fa-user-secret"></i>
+                                <i v-else="tag.type=='employee'" class="fa fa-user"></i>
+                                {{tag.label}}
+                            </el-tag>
+                        </span>
+                        <el-input v-show="tags.length!=0"></el-input>
+                        <el-input v-show="tags.length==0" placeholder="请输入内容"></el-input>
+                    </div>
+                    <el-dialog :visible.sync="dialogVisible" :width="300" custom-class="componydialog"
+                            :modal-append-to-body="false" :close-on-click-modal="false" append-to-body="true">
+                        <zsfund-origination-tree :prevnodes="prevNodes" :options="option" 
+                            ref="orgTree" :baseurl="baseUrl" :dialog="dialogVisible"
+                            v-on:getvalue="setValue" v-on:cancelbutton="dialogVisible=false;"
+                            v-on:confirmbutton="handleConfirm"></zsfund-origination-tree>
+                    </el-dialog>
+                </div>
+            </div>`,
+        methods: {
+            /**
+             * 接收子组件的getvalue回调,维护选择的值
+             * @param data
+             */
+            setValue(data) {
+                this.selectData = data;
+                if (!this.options.multiple) {
+                    this.handleConfirm();
+                }
+            },
+            /**
+             * 接收子组件的confirmbutton回调,点击确认按钮后执行的操作
+             */
+            handleConfirm() {
+                //浅拷贝，tags改变会带动selectdata改变
+                //进而selectData带动data改变
+                //三者使用同一块内存？
+                //this.tags = this.selectData;//并不是呢
 
-            if (this.options.multiple) {
-                this.tags = $.extend(true, [], this.selectData).sort((a, b) => { return b.data.unitType - a.data.unitType; });
-            } else {
-                this.tags = this.selectData === "" ? "" : $.extend(true, {}, this.selectData);
-            }
+                if (this.options.multiple) {
+                    this.tags = $.extend(true, [], this.selectData).sort((a, b) => { return b.data.unitType - a.data.unitType; });
+                } else {
+                    this.tags = this.selectData === "" ? "" : $.extend(true, {}, this.selectData);
+                }
 
-            if (this.prevNodes && this.prevNodes.length) {
-                if (!this.options.multiple && this.firstload) {
+                if (this.prevNodes && this.prevNodes.length) {
+                    if (!this.options.multiple && this.firstload) {
+                        this.firstload = false;
+                        return;
+                    }
+                } else {
                     this.firstload = false;
+                }
+
+                this.dialogVisible = false;
+            },
+            /**
+             * 移除标签进行的操作
+             * @param tag
+             */
+            closeTag(tag) {
+                if (this.$refs.orgTree) {
+                    this.$refs.orgTree.removeTag(tag);
+                }
+                if (this.options.multiple) {
+                    this.tags.splice(this.tags.indexOf(tag), 1);
+                } else {
+                    this.tags = [];
+                }
+            },
+            /**
+             * 数据格式转换,从api格式转为页面数据格式
+             * @param data
+             */
+            setArrayFromData(data) {
+                return {
+                    label: data.displayName,
+                    leaf: (data.unitType & OrgBasePara.getLastBit(this.options.displayType)) == 1,
+                    id: data.id,
+                    parentId: data.parentId,
+                    type: (data.unitType == OrgBasePara.OrgSelectType.Employee) ? "employee" : "department",
+                    disabled: (data.unitType & this.options.chosenType) == 0,
+                    data: data
+                }
+            },
+            /**
+             * 加载初始值或更新后的值
+             */
+            loadLastNodes() {
+                var idList = this.value;
+                if (idList == undefined) {
                     return;
                 }
-            } else {
-                this.firstload = false;
-            }
+                if (idList === "") {
+                    this.tags = [];
+                    return;
+                }
 
-            this.dialogVisible = false;
-        },
-        closeTag(tag) {
-            if (this.$refs.orgTree) {
-                this.$refs.orgTree.removeTag(tag);
-            }
-            if (this.options.multiple) {
-                this.tags.splice(this.tags.indexOf(tag), 1);
-            } else {
-                this.tags = [];
-            }
-        },
-        setArrayFromData: function (data){
-            return {
-                label: data.displayName,
-                leaf: (data.unitType & OrgBasePara.getLastBit(this.options.displayType)) == 1,
-                id: data.id,
-                parentId: data.parentId,
-                type: (data.unitType == OrgBasePara.OrgSelectType.Employee) ? "employee" : "department",
-                disabled: (data.unitType & this.options.chosenType) == 0,
-                data: data
-            }
-        },
-        loadLastNodes() {
-            var idList = this.value;
-            if (idList==""||!idList) {
-                return;
-            }
-            
-            
-            //else {
-            //    this.tags.splice(0);
-            //}
 
-            var url = this.baseUrl + "/api/User/List";
-            var para = "idList=" + idList;
-            //部门选择模式和混合选择模式逻辑未做
-            ajaxHelper.RequestData(url, para, (data) => {
-                var idList = this.value.split(";");
-                //把部门节点筛选出进行保留
-                //var test = $.extend(true, [], this.tags);
-                //test.sort((a, b) => {
-                //    return OrgBasePara.findIndex(idList, function (e) { return e.data.unitType != OrgBasePara.OrgSelectType.Employee })
-                //        - OrgBasePara.findIndex(idList, function (e) { return e.data.unitType != OrgBasePara.OrgSelectType.Employee });
-                //});
-                //if (this.$refs.orgTree) {
-                //    this.tags.splice(0, OrgBasePara.findIndex(this.tags,
-                //        (e) => { return e.data.unitType == OrgBasePara.OrgSelectType.Employee }));
+                //else {
+                //    this.tags.splice(0);
                 //}
-                //if (this.options.multiple) 
-                var cpy = [];
-                for (var i in data) {
-                    cpy.push(this.setArrayFromData(data[i]))
-                }
-                //排序 api返回的数据结果没有按上传的idList进行排序
-                cpy.sort((a, b) => {
-                    return OrgBasePara.findIndex(idList, function (e) { return e == a.id })
-                        - OrgBasePara.findIndex(idList, function (e) { return e == b.id });
-                });
-                //this.tags = cpy;
-                if (this.tags.__ob__) {
-                    this.tags = $.extend(true, [], cpy);
-                } else {
-                    this.tags = $.extend(true, this.tags, cpy);
-                }
-            })
-        }
-    },
-    watch: {
-        tags(newVal, oldVal) {
-            if (newVal === "") {
-                this.tags = [];
-            } else if (!Array.isArray(newVal)) {
-                this.tags = new Array(newVal);
-            } else {
-                var res = newVal;
-                var prev = []
-                var idList = [];
-                for (var i in res) {
-                    prev.push(res[i].data);
-                    idList.push(res[i].id);
-                }
-                //tags变动引发内层值变动
-                this.prevNodes = prev;
 
-                //this.$emit('change', res);
-                this.$emit('input', idList.join(";"));
+                var url = this.baseUrl + "/api/User/List";
+                var para = "idList=" + idList;
+                //部门选择模式和混合选择模式逻辑未做
+                ajaxHelper.RequestData(url, para, (data) => {
+                    var idList = this.value.split(";");
+                    //把部门节点筛选出进行保留
+                    //var test = $.extend(true, [], this.tags);
+                    //test.sort((a, b) => {
+                    //    return OrgBasePara.findIndex(idList, function (e) { return e.data.unitType != OrgBasePara.OrgSelectType.Employee })
+                    //        - OrgBasePara.findIndex(idList, function (e) { return e.data.unitType != OrgBasePara.OrgSelectType.Employee });
+                    //});
+                    //if (this.$refs.orgTree) {
+                    //    this.tags.splice(0, OrgBasePara.findIndex(this.tags,
+                    //        (e) => { return e.data.unitType == OrgBasePara.OrgSelectType.Employee }));
+                    //}
+                    //if (this.options.multiple) 
+                    var cpy = [];
+                    for (var i in data) {
+                        cpy.push(this.setArrayFromData(data[i]))
+                    }
+                    //排序 api返回的数据结果没有按上传的idList进行排序
+                    cpy.sort((a, b) => {
+                        return OrgBasePara.findIndex(idList, function (e) { return e == a.id })
+                            - OrgBasePara.findIndex(idList, function (e) { return e == b.id });
+                    });
+                    //this.tags = cpy;
+                    if (this.tags.__ob__) {
+                        this.tags = $.extend(true, [], cpy);
+                    } else {
+                        this.tags = $.extend(true, this.tags, cpy);
+                    }
+                })
             }
         },
-        value(newVal, oldVal) {
-            var idList = [];
-            for (var i in this.prevNodes) {
-                idList.push(this.prevNodes[i].id);
+        watch: {
+            /**
+             * tags为显示的选中值,tags变动时通知子组件和外部v-bind进行数值更新
+             * @param newVal
+             * @param oldVal
+             */
+            tags(newVal, oldVal) {
+                if (newVal === "") {
+                    this.tags = [];
+                } else if (!Array.isArray(newVal)) {
+                    this.tags = new Array(newVal);
+                } else {
+                    var res = newVal;
+                    var prev = []
+                    var idList = [];
+                    for (var i in res) {
+                        prev.push(res[i].data);
+                        idList.push(res[i].id);
+                    }
+                    //tags变动引发内层值变动
+                    this.prevNodes = prev;
+
+                    this.$emit('input', idList.join(";"));
+                    setTimeout(() => {
+                        this.$emit('change', idList.join(";"));
+                    }, 50);
+                }
+            },
+            /**
+             * value为外部传入的初始值,初始化或更新后触发组件更新
+             * @param newVal
+             * @param oldVal
+             */
+            value(newVal, oldVal) {
+                var idList = [];
+                for (var i in this.prevNodes) {
+                    idList.push(this.prevNodes[i].id);
+                }
+                if (idList.join(";") != newVal) {
+                    this.loadLastNodes();
+                }
+            },
+        },
+        computed: {
+            option: function () {
+                return {
+                    collapseTags: this.options.collapseTags ? this.options.collapseTags : false,
+                    multiple: this.options.multiple != undefined ? this.options.multiple : true,
+                    displayType: this.options.displayType ? this.options.displayType : OrgBasePara.OrgSelectType.All,
+                    chosenType: this.options.chosenType ? this.options.chosenType : this.options.displayType
+                };
+            },
+            baseUrl: function () {
+                return this.baseurl ? this.baseurl : "https://oa.zsfund.com/ApiGateway/UserService";
             }
-            if (idList.join(";") != newVal) {
-                this.loadLastNodes();
-            }
+        },
+        mounted: function () {
+            this.loadLastNodes();
         }
-    },
-    created: function () {
-        this.option.collapseTags = this.options.collapseTags ? this.options.collapseTags : false;
-        this.option.multiple = this.options.multiple != undefined ? this.options.multiple : true;
-        //this.option.type = this.options.type ? this.options.type : orgSelectType.all;
-        this.option.displayType = this.options.displayType ? this.options.displayType : OrgBasePara.OrgSelectType.All;
-        this.option.chosenType = this.options.chosenType ? this.options.chosenType : this.options.displayType;
-        //setArrayFromData内外同步
-        //this.option.setArrayFromData = this.options.setArrayFromData;
-
-        this.baseUrl = this.baseurl ? this.baseurl : "https://oa.zsfund.com/ApiGateway/UserService";
-
-        //this.option.width= "260";
-        //this.option.height = "300";
-    },
-    mounted: function () {
-        this.loadLastNodes();
     }
-});
+    
+}
+var orgselect = new OrgSelect();
+
+Vue.component("zsfund-origination-input-select", orgselect.vm);

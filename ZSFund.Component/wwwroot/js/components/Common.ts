@@ -79,6 +79,25 @@ interface String {
 
 class Common {
     /**
+     * 通过url和para计算URL字符串
+     * @param baseurl
+     * @param para 参数对象
+     */
+    public static GetUrl(url: string, para): string {
+        var res = "";
+        var first = true;
+        for (var key in para) {
+            if (first) {
+                res += "?";
+                first = false;
+            } else {
+                res += '&';
+            }
+            res += key + "=" + encodeURIComponent(para[key]);
+        }
+        return url + res;
+    }
+    /**
      * 获取随机数(1-n之间的一个整数)
      */
     public static GetRandom(n: number) {
@@ -140,7 +159,7 @@ class Common {
     public static InvokeWebApi(url: string, method: string, errMsg: string, data: any = null, async: boolean = false, func: Function = null): any {
         var result: any = "";
         var a = $.ajax({
-            url: url,
+            url: Common.AddRandom(url),
             type: method,
             async: async,
             cache: false,

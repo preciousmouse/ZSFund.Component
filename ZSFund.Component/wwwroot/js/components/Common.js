@@ -45,6 +45,26 @@ var Common = /** @class */ (function () {
     function Common() {
     }
     /**
+     * 通过url和para计算URL字符串
+     * @param baseurl
+     * @param para 参数对象
+     */
+    Common.GetUrl = function (url, para) {
+        var res = "";
+        var first = true;
+        for (var key in para) {
+            if (first) {
+                res += "?";
+                first = false;
+            }
+            else {
+                res += '&';
+            }
+            res += key + "=" + encodeURIComponent(para[key]);
+        }
+        return url + res;
+    };
+    /**
      * 获取随机数(1-n之间的一个整数)
      */
     Common.GetRandom = function (n) {
@@ -111,7 +131,7 @@ var Common = /** @class */ (function () {
         if (func === void 0) { func = null; }
         var result = "";
         var a = $.ajax({
-            url: url,
+            url: Common.AddRandom(url),
             type: method,
             async: async,
             cache: false,

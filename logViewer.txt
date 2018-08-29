@@ -1,0 +1,8 @@
+
+request:
+	1、	type和type2中存在“”字段，但是提交空字段并不会进行筛选
+		在filterNull中已经排除空字段的请求
+		但是需求不明确
+
+	2、	超出width的内容（title，message）使用tooltip
+		根据需求可能改为popover
